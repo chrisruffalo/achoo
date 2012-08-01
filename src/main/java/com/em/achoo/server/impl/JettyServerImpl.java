@@ -29,8 +29,9 @@ public class JettyServerImpl implements IServer {
 		
 		//set scanner to true
 		restServletHandler.getInitParams().put(ResteasyContextParameters.RESTEASY_SCAN, "true");
+		//use built-in providers as well		
+		restServletHandler.getInitParams().put(ResteasyContextParameters.RESTEASY_USE_BUILTIN_PROVIDERS, "true");
 		
-		//add bootstrap instance and the servlet dispatcher class
 		AchooResteasyBootstrap bootstrap = new AchooResteasyBootstrap();
 		restServletHandler.addEventListener(bootstrap);
 

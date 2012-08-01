@@ -11,6 +11,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -35,6 +36,7 @@ public class MessageRecieveEndpoint {
 	@POST
 	@Path("/send/{exchangeName}")
 	@Consumes(value={MediaType.WILDCARD})
+	@Produces(value={MediaType.TEXT_PLAIN})
 	public String send(@PathParam(value="exchangeName") String name, @Context HttpServletRequest request) {
 		//create message
 		Message message = Message.create();

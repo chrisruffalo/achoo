@@ -6,6 +6,18 @@
   <name>achoo</name>
   
   <repositories>
+  	<!-- jboss stuff -->
+  	<repository>
+  		<id>jboss</id>
+  		<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
+  	</repository>
+  	<repository>
+  		<id>jboss-snapshots</id>
+  		<url>https://repository.jboss.org/nexus/content/repositories/snapshots</url>
+  		<snapshots>
+  			<enabled>true</enabled>
+  		</snapshots>
+  	</repository>
   	<!-- typesafe for akka and play! mini -->
   	<repository>
   		<id>typesafe-releases</id>
@@ -55,10 +67,6 @@
   	</dependency>
 	<dependency>
 		<groupId>org.jboss.resteasy</groupId>
-		<artifactId>jaxrs-api</artifactId>
-	</dependency>
-	<dependency>
-		<groupId>org.jboss.resteasy</groupId>
 		<artifactId>resteasy-jaxb-provider</artifactId>
 	</dependency>
 	<dependency>
@@ -67,7 +75,7 @@
 	</dependency>
 	<dependency>
 	    <groupId>org.jboss.resteasy</groupId>
-	    <artifactId>resteasy-jdk-http</artifactId>
+	    <artifactId>resteasy-jaxrs</artifactId>
 	</dependency>
 	<dependency>
    		<groupId>org.jboss.resteasy</groupId>
@@ -81,10 +89,6 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-servlet</artifactId>
     </dependency>
-	<dependency>
-	     <groupId>javax.servlet</groupId>
-	     <artifactId>servlet-api</artifactId>
-	</dependency>
   	<dependency>
 		<groupId>com.beust</groupId>
 		<artifactId>jcommander</artifactId>
@@ -116,6 +120,7 @@
 					<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 						<mainClass>com.em.achoo.Achoo</mainClass>
 					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 				</transformers>
 				<filters>
 	                <filter>
@@ -126,6 +131,14 @@
 						  <exclude>META-INF/*.DSA</exclude>
 						  <exclude>META-INF/*.RSA</exclude>
 						</excludes>
+	                </filter>
+	                <filter>
+	                	<!-- we're adding com.typesafe.config manually, ignore packaged akka version, and avoid duplicates in shaded jar -->
+	                	<artifact>com.typesafe.akka:akka-actor</artifact>
+	                	<excludes>
+	                		<exclude>com/typesafe/config</exclude>
+		                	<exclude>com/typesafe/config/**</exclude>		                	
+	                	</excludes>
 	                </filter>
  	        	</filters>				
 			</configuration>
@@ -195,7 +208,7 @@
 	  	<!-- resteasy (services) -->
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>jaxrs-api</artifactId>
+			<artifactId>resteasy-jaxrs</artifactId>
 			<version>${resteasy.version}</version>
 		</dependency>
 		<!-- resteasy jaxb and json providers -->
@@ -211,11 +224,6 @@
 		</dependency>
 	  	<!-- resteasy service containers -->
 		<dependency>
-		    <groupId>org.jboss.resteasy</groupId>
-		    <artifactId>resteasy-jdk-http</artifactId>
-		    <version>${resteasy.version}</version>
-		</dependency>
-		<dependency>
       		<groupId>org.jboss.resteasy</groupId>
       		<artifactId>tjws</artifactId>
       		<version>${resteasy.version}</version>
@@ -230,12 +238,6 @@
             <artifactId>jetty-servlet</artifactId>
             <version>${jetty.version}</version>
         </dependency>        
-		<!-- servlet 2.5 is required for tjws -->
-		<dependency>
-		     <groupId>javax.servlet</groupId>
-		     <artifactId>servlet-api</artifactId>
-		     <version>2.5</version>
-		</dependency>
 	  	<!-- command line parsing -->
 	  	<dependency>
 			<groupId>com.beust</groupId>

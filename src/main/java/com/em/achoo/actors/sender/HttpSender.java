@@ -41,6 +41,8 @@ public class HttpSender extends AbstractSender {
 	@Override
 	public void send(Message message) {
 		
+		this.logger.info("Sent message through sender at: {}", this.self().path().toString());
+		
 		Subscription subscription = this.getSubscription();
 		
 		if(subscription instanceof HttpSubscription) {

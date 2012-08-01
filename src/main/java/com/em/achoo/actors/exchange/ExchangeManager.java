@@ -14,6 +14,7 @@ import akka.dispatch.Futures;
 import akka.japi.Creator;
 
 import com.em.achoo.actors.AchooActorSystem;
+import com.em.achoo.actors.exchange.factory.QueueExchangeRoutingFactory;
 import com.em.achoo.actors.interfaces.IExchangeManager;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.Subscription;
@@ -52,7 +53,7 @@ public class ExchangeManager implements IExchangeManager {
 					dispatchRef = TypedActor.context().actorOf(new Props(TopicExchange.class), exchange.getName());
 					break;
 				case QUEUE:
-					dispatchRef = TypedActor.context().actorOf(new Props(QueueExchange.class), exchange.getName());
+					dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory()), exchange.getName());
 					break;
 			}
 			this.logger.info("Created exchange: {} of type {}", exchange.getName(), exchange.getType());

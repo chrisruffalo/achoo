@@ -50,3 +50,15 @@ without requiring expensive clients, multiple threads, or esoteric protocols.  W
 
 * 1.4 - Sterling
   * Users shall be able to configure which endpoints (management, subscribe, send) go on a particular interface
+  * SSL support for Jetty and TJWS
+  * HTTPS callback support
+
+## API
+
+### Basics
+
+Achoo's REST endpoints are deployed to the "/" context root.  This means that http://localhost:8082/ will bring you to the root of the application.
+
+### Subscribing
+
+Achoo allows you to subscribe (as of 0.1-SNAPSHOT) in two different ways: demand and http.  

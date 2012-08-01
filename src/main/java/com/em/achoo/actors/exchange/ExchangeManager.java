@@ -53,7 +53,7 @@ public class ExchangeManager implements IExchangeManager {
 					dispatchRef = TypedActor.context().actorOf(new Props(TopicExchange.class), exchange.getName());
 					break;
 				case QUEUE:
-					dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory()), exchange.getName());
+					dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory(TypedActor.context().system())), exchange.getName());
 					break;
 			}
 			this.logger.info("Created exchange: {} of type {}", exchange.getName(), exchange.getType());

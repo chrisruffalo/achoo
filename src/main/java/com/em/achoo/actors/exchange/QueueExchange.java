@@ -65,8 +65,11 @@ public class QueueExchange extends UntypedActor {
 				this.logger.info("Subscription seems to exist for: {} on {} (at path: '{}')", new Object[]{((Subscription) message).getId(), ((Subscription) message).getExchange().getName(), subscriber.path().toString()});
 			}
 		} else if(message instanceof UnsubscribeMessage) {
+			//get subscription name
+			String subscriptionName	= QueueExchange.SUBSCRIPTION_PREFIX + ((UnsubscribeMessage)message).getSubscriptionId();
+			
 			//lookup subscriber and kill it
-			ActorRef subscriber = this.context().actorFor(((UnsubscribeMessage) message).getSubscriptionId());
+			ActorRef subscriber = this.context().actorFor(subscriptionName);
 			if(subscriber != null && !subscriber.isTerminated()) {
 				subscriber.tell(PoisonPill.getInstance());
 			}
@@ -107,7 +110,7 @@ public class QueueExchange extends UntypedActor {
 			String end = childRef.path().name();
 			
 			//if it starts with the subscription prefix
-			if(end.startsWith(QueueExchange.SUBSCRIPTION_PREFIX)) {
+			if(end != null && end.toLowerCase().startsWith(QueueExchange.SUBSCRIPTION_PREFIX)) {
 				routedRefs.add(childRef);
 			}
 		}

@@ -9,7 +9,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.model.Exchange;
@@ -22,8 +24,14 @@ import com.em.achoo.model.SubscriptionType;
 @Path("/")
 public class SubscriptionManagerEndpoint {
 
-	//private Logger logger = LoggerFactory.getLogger(SubscriptionManagerEndpoint.class);
-	
+	/**
+	 * Subscribe to an on-demand topic.  Returns the subscription id.
+	 * 
+	 * 
+	 * @param exchangeName - name of the exchange to subscribe to
+	 * @param typeString - queue or topic mode
+	 * @return
+	 */
 	@GET
 	@PUT
 	@POST
@@ -49,11 +57,22 @@ public class SubscriptionManagerEndpoint {
 		subscription.setExchange(exchange);
 		subscription.setType(SubscriptionType.ON_DEMAND);
 
-		this.subscribe(subscription);
+		this.doSubscribe(subscription);
 		
 		return subscription.getId();
 	}
 	
+	/**
+	 * Subscribe to an http callback topic.  Returns the subscription id.
+	 * 
+	 * @param exchangeName - name of the exchange to subscribe to
+	 * @param typeString - queue or topic mode
+	 * @param host - host that the http callback is on
+	 * @param port - port the http callback is on
+	 * @param path - additional path information for the callback (where it should point)
+	 * @param methodString - method (GET, PUT, POST, etc)
+	 * @return
+	 */
 	@GET
 	@PUT
 	@POST
@@ -93,17 +112,19 @@ public class SubscriptionManagerEndpoint {
 		}
 		subscription.setMethod(method);
 		
-		this.subscribe(subscription);
+		this.doSubscribe(subscription);
 		
 		return subscription.getId();
 	}
 	
 
-	private Subscription subscribe(Subscription subscription) {
-		subscription = ExchangeManager.get().subscribe(subscription);
-		return subscription;
-	}
-	
+	/**
+	 * Unsubscribe from a given exchange.  TOPIC/QUEUE type does not matter here.
+	 * 
+	 * @param exchangeName - name of the exchange to subscribe to
+	 * @param subscriptionId - the subscription id that was returned when a subscription was created
+	 * @return
+	 */
 	@GET
 	@PUT
 	@POST
@@ -111,10 +132,22 @@ public class SubscriptionManagerEndpoint {
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String unsubscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="subscriptionId") String subscriptionId) {
-		
+		if(exchangeName == null || exchangeName.isEmpty() || subscriptionId == null || subscriptionId.isEmpty()) {
+			throw new WebApplicationException(Response.status(404).entity("no exchange or subscriptionid given").build());
+		}		
+		return Boolean.toString(this.doUnsubscribe(exchangeName, subscriptionId));
+	}
+	
+	
+	private boolean doUnsubscribe(String exchangeName, String subscriptionId) {
 		boolean result = ExchangeManager.get().unsubscribe(exchangeName, subscriptionId);
 		
-		return Boolean.toString(result);
+		return result;
+	}
+
+	private Subscription doSubscribe(Subscription subscription) {
+		subscription = ExchangeManager.get().subscribe(subscription);
+		return subscription;
 	}
 	
 }

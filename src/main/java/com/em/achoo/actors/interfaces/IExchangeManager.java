@@ -1,6 +1,6 @@
 package com.em.achoo.actors.interfaces;
 
-import akka.dispatch.Future;
+import scala.concurrent.Future;
 
 import com.em.achoo.model.Message;
 import com.em.achoo.model.Subscription;

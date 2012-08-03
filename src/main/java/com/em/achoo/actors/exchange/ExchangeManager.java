@@ -6,10 +6,10 @@ import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.TypedActor;
-import akka.dispatch.Future;
 import akka.dispatch.Futures;
 import akka.japi.Creator;
 
@@ -31,14 +31,15 @@ public class ExchangeManager implements IExchangeManager {
 		
 		if(dispatchRef == null || dispatchRef.isTerminated()) {
 			this.logger.info("Could not route message '{}' non-existant exchange '{}'", message.getId(), exchangeName);
-			return Futures.successful(false, TypedActor.context().dispatcher());	
+			
+			return Futures.successful(true);	
 		}
 		
 		//send message to exchange (topic or queue) for further dispatch
 		dispatchRef.tell(message);
 
 		//return response
-		return Futures.successful(true, TypedActor.context().dispatcher());
+		return Futures.successful(true);
 	}
 
 	@Override

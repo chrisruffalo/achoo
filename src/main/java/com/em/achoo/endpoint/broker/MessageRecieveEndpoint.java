@@ -18,9 +18,9 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.dispatch.Await;
-import akka.dispatch.Future;
-import akka.util.Duration;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.util.Duration;
 
 import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.actors.interfaces.IExchangeManager;

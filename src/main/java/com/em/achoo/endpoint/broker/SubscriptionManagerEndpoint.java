@@ -13,7 +13,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.em.achoo.actors.exchange.ExchangeManager;
+import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Exchange;
 import com.em.achoo.model.ExchangeType;
 import com.em.achoo.model.HttpSendMethod;
@@ -21,16 +21,22 @@ import com.em.achoo.model.HttpSubscription;
 import com.em.achoo.model.Subscription;
 import com.em.achoo.model.SubscriptionType;
 
+/**
+ * Manages subscription information for Achoo subscribers.
+ * 
+ * @author chris
+ *
+ */
 @Path("/")
-public class SubscriptionManagerEndpoint {
+public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 
 	/**
 	 * Subscribe to an on-demand topic.  Returns the subscription id.
 	 * 
 	 * 
-	 * @param exchangeName - name of the exchange to subscribe to
-	 * @param typeString - queue or topic mode
-	 * @return
+	 * @param exchangeName name of the exchange to subscribe to
+	 * @param typeString queue or topic mode
+	 * @return subscription uuid
 	 */
 	@GET
 	@PUT
@@ -65,13 +71,13 @@ public class SubscriptionManagerEndpoint {
 	/**
 	 * Subscribe to an http callback topic.  Returns the subscription id.
 	 * 
-	 * @param exchangeName - name of the exchange to subscribe to
-	 * @param typeString - queue or topic mode
-	 * @param host - host that the http callback is on
-	 * @param port - port the http callback is on
-	 * @param path - additional path information for the callback (where it should point)
-	 * @param methodString - method (GET, PUT, POST, etc)
-	 * @return
+	 * @param exchangeName name of the exchange to subscribe to
+	 * @param typeString queue or topic mode
+	 * @param host host that the http callback is on
+	 * @param port port the http callback is on
+	 * @param path additional path information for the callback (where it should point)
+	 * @param methodString method (GET, PUT, POST, etc)
+	 * @return subscription uuid
 	 */
 	@GET
 	@PUT
@@ -121,9 +127,9 @@ public class SubscriptionManagerEndpoint {
 	/**
 	 * Unsubscribe from a given exchange.  TOPIC/QUEUE type does not matter here.
 	 * 
-	 * @param exchangeName - name of the exchange to subscribe to
-	 * @param subscriptionId - the subscription id that was returned when a subscription was created
-	 * @return
+	 * @param exchangeName name of the exchange to subscribe to
+	 * @param subscriptionId the subscription id that was returned when a subscription was created
+	 * @return subscription uuid
 	 */
 	@GET
 	@PUT
@@ -138,15 +144,27 @@ public class SubscriptionManagerEndpoint {
 		return Boolean.toString(this.doUnsubscribe(exchangeName, subscriptionId));
 	}
 	
-	
+	/**
+	 * Implments the unsubscribe action, called by various unsubscribe methods so that they can focus on REST aspects
+	 * 
+	 * @param exchangeName the exchange to unsubscribe from
+	 * @param subscriptionId subscription uuid given when the original subscribe method was called
+	 * @return
+	 */
 	private boolean doUnsubscribe(String exchangeName, String subscriptionId) {
-		boolean result = ExchangeManager.get().unsubscribe(exchangeName, subscriptionId);
+		boolean result = this.getExchangeManager().unsubscribe(exchangeName, subscriptionId);
 		
 		return result;
 	}
 
+	/**
+	 * Passes a subscription implementation (for various subscription types) to the exchange manager dispatch
+	 * 
+	 * @param subscription
+	 * @return
+	 */
 	private Subscription doSubscribe(Subscription subscription) {
-		subscription = ExchangeManager.get().subscribe(subscription);
+		subscription = this.getExchangeManager().subscribe(subscription);
 		return subscription;
 	}
 	

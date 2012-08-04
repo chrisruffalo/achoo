@@ -9,6 +9,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 
+import com.em.achoo.configure.ConfigurationKeys;
 import com.em.achoo.configure.IServerConfiguration;
 import com.em.achoo.server.IServer;
 import com.em.achoo.server.impl.jetty.AchooResteasyBootstrap;
@@ -59,6 +60,10 @@ public class JettyServerImpl implements IServer {
 
 		//create servlet dispatcher for rest endpoints that will be automatically found by the bootstrap
 		restServletHandler.addServlet(HttpServletDispatcher.class, "/");
+		
+		//set attributes for contained items
+		restServletHandler.getServletContext().setAttribute(ConfigurationKeys.ACHOO_CONFIG.toString(), configuration.getRawConfiguration());
+		restServletHandler.getServletContext().setAttribute(ConfigurationKeys.ACHOO_ACTOR_SYSTEM.toString(), configuration.getAchooActorSystem());
 		
 		//set handler
 		this.jettyServer.setHandler(restServletHandler);

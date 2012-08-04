@@ -12,9 +12,13 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
+import org.jboss.resteasy.spi.NoLogWebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +28,30 @@ import scala.concurrent.util.Duration;
 
 import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.actors.interfaces.IExchangeManager;
+import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Message;
 import com.google.common.io.ByteStreams;
 
+/**
+ * Class that publishes different endpoints for different types of message retrieve
+ * 
+ * @author chris
+ *
+ */
 @Path("/")
-public class MessageRecieveEndpoint {
+public class MessageRecieveEndpoint extends AbstractEndpoint {
 
 	private Logger log = LoggerFactory.getLogger(MessageRecieveEndpoint.class);
 	
+	/**
+	 * Send a message to the given exchange.  
+	 * 
+	 * @throws WebApplicationException(404) if the exchange does not exist
+	 * 
+	 * @param name name of the exchange
+	 * @param request
+	 * @return
+	 */
 	@PUT
 	@POST
 	@Path("/send/{exchangeName}")
@@ -57,27 +77,34 @@ public class MessageRecieveEndpoint {
 			ByteStreams.copy(requestInputStream, outputStream);
 			content = outputStream.toByteArray();
 		} catch (IOException e) {
-			this.log.warn("Message does not contain a body.");
+			this.log.warn("message {} does not contain a body.", message.getId());
 		}
 		message.setBody(content);
 
 		boolean result = this.dispatch(name, message);
 		String response = "ok";
 		if(!result) {
-			response = "error";
+			throw new NoLogWebApplicationException(Response.status(Status.NOT_FOUND).entity("nonexistent exchange").build());
 		}
 		
 		//return response
 		return response;
 	}
 	
+	/**
+	 * Method used by different send endpoints to route the message
+	 * 
+	 * @param exchangeName
+	 * @param achooMessage
+	 * @return
+	 */
 	private boolean dispatch(String exchangeName, Message achooMessage) {
 		if(achooMessage == null) {
 			return false;
 		}
 		
 		//create system and reference for dispatch actor
-		IExchangeManager manager = ExchangeManager.get();
+		IExchangeManager manager = ExchangeManager.get(this.getActorSystem());
 		
 		//tell the dispatcher the message that was just recieved, and wait for future response
 		Future<Boolean> managerDispatchFuture = manager.dispatch(exchangeName, achooMessage);

@@ -16,7 +16,7 @@ public class LocalDeliverySender extends AbstractSender {
 
 	@Override
 	public void send(Message message) {
-		logger.info("Message recieved by subscription {} on exchange {}", this.getSubscription().getId(), this.self().path().toString());
+		logger.info("Message recieved by local (on-demand) subscription {} on exchange {}", this.getSubscription().getId(), this.self().path().toString());
 	}
 
 }

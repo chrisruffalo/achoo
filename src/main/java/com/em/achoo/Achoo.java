@@ -21,6 +21,7 @@ import com.em.achoo.actors.AchooActorSystem;
 import com.em.achoo.actors.AchooManager;
 import com.em.achoo.actors.factory.AchooManagerFactory;
 import com.em.achoo.configure.AchooCommandLine;
+import com.em.achoo.configure.ConfigurationUtility;
 import com.em.achoo.configure.IServerConfiguration;
 import com.em.achoo.endpoint.FavoriteIcon;
 import com.em.achoo.endpoint.broker.MessageRecieveEndpoint;
@@ -34,7 +35,6 @@ import com.em.achoo.server.ServerType;
 import com.em.achoo.server.impl.BasicServerConfiguration;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigFactory;
 
 public class Achoo {
 
@@ -45,6 +45,18 @@ public class Achoo {
 	private boolean started = false;
 	
 	private Set<IServer> servers = null;
+	
+	private AchooActorSystem instanceActorSystem = null;
+	
+	//private AchooCommandLine commandLine = null;
+	
+	private Config configuration = null;
+	
+	public Achoo(AchooActorSystem actorSystem, AchooCommandLine commandLine, Config configuration) {
+		this.instanceActorSystem = actorSystem;
+		//this.commandLine = commandLine;
+		this.configuration = configuration;
+	}
 	
 	public void await() {
 		try {
@@ -72,32 +84,7 @@ public class Achoo {
 		if(this.started) {
 			return;
 		}
-		
-		AchooCommandLine commandValues = message.getCommandLineValues();
 
-		File configFile = null;
-		if(commandValues.getConfigurationFile() != null) {
-			configFile = commandValues.getConfigurationFile();
-		} else {
-			configFile = new File("./achoo.conf");
-		}
-
-		//parse found file
-		Config achooConfig = ConfigFactory.parseFile(configFile);
-		
-		//merge with fallback onto built-in configuration file
-		Config resourceConfig = ConfigFactory.load("achoo");
-		achooConfig = achooConfig.withFallback(resourceConfig);
-		
-		Set<IServerConfiguration> configurationSet = new HashSet<IServerConfiguration>();
-		
-		List<? extends Config> list = Collections.emptyList();
-		try {
-			list = achooConfig.getConfigList("achoo.servers");
-		} catch (ConfigException.Missing e) {
-			this.log.warn("No configuration found at key '{}', no HTTP endpoints will be started", "achoo.servers");
-		}
-		
 		Class<?>[] endpoints = new Class<?>[]{
 				FavoriteIcon.class,
 				ManagementEndpoint.class,
@@ -105,7 +92,16 @@ public class Achoo {
 				SubscriptionManagerEndpoint.class,
 				Echo.class
 		};		
-
+		
+		Set<IServerConfiguration> configurationSet = new HashSet<IServerConfiguration>();
+		
+		List<? extends Config> list = Collections.emptyList();
+		try {
+			list = this.configuration.getConfigList("achoo.servers");
+		} catch (ConfigException.Missing e) {
+			this.log.warn("No configuration found at key '{}', no HTTP endpoints will be started", "achoo.servers");
+		}
+		
 		for(Config serverObject : list) {
 
 			String bindAddress = serverObject.getString("bind");
@@ -114,6 +110,8 @@ public class Achoo {
 			ServerType type = ServerType.getServerForString(typeString);
 						
 			BasicServerConfiguration serverConfiguration = new BasicServerConfiguration(bindAddress, port, type, endpoints);
+			serverConfiguration.setRawConfiguration(this.configuration);
+			serverConfiguration.setAchooActorSystem(this.instanceActorSystem);
 			
 			configurationSet.add(serverConfiguration);
 		}
@@ -151,18 +149,33 @@ public class Achoo {
 			//quit
 			return;
 		}		
-						
-		//create achoo system
-		final Achoo achoo = new Achoo(); 
+
+		//get configuration file from command line options
+		File configFile = commandValues.getConfigurationFile();
+
+		//parse found file
+		Config achooConfig = ConfigurationUtility.getConfiguration(configFile, "achoo");		
 		
-		//create actor system
-		ActorSystem system = AchooActorSystem.INSTANCE.getSystem();
+		//instantiate achoo system
+		boolean clustered = achooConfig.getBoolean("achoo.clustering");
+		String systemName = achooConfig.getString("achoo.node-name");
+		if(systemName == null || systemName.isEmpty()) {
+			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
+		}
+		
+		//get system
+		AchooActorSystem achooSystem = new AchooActorSystem(systemName, achooConfig, clustered);
+		ActorSystem system = achooSystem.getSystem();
+		
+		//create achoo object
+		final Achoo achoo = new Achoo(achooSystem, commandValues, achooConfig); 
+		
+		//create manager factory and manage item
 		AchooManagerFactory factory = new AchooManagerFactory(achoo);
 		ActorRef ref = system.actorOf(new Props(factory), AchooManager.NAME);
 		
-		//create start message
+		//start with akka system
 		StartMessage start = new StartMessage();
-		start.setCommandLineValues(commandValues);
 		
 		//dispatch start message
 		ref.tell(start);

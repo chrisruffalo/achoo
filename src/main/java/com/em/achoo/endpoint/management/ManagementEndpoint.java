@@ -8,20 +8,21 @@ import javax.ws.rs.Path;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
-import com.em.achoo.actors.AchooActorSystem;
 import com.em.achoo.actors.AchooManager;
+import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.StopMessage;
 
 @Path("/management")
-public class ManagementEndpoint {
-
+public class ManagementEndpoint extends AbstractEndpoint {
+	
 	@Path("/kill")
 	@GET
 	@PUT
 	@POST
 	public String kill() {
 		
-		ActorSystem system = AchooActorSystem.INSTANCE.getSystem();
+		ActorSystem system = this.getActorSystem();
+		
 		ActorRef ref = system.actorFor("/user/" + AchooManager.NAME);
 		
 		//kill system

@@ -51,6 +51,10 @@
   	</dependency>
   	<dependency>
   		<groupId>com.typesafe.akka</groupId>
+  		<artifactId>akka-cluster</artifactId>
+  	</dependency>  	
+  	<dependency>
+  		<groupId>com.typesafe.akka</groupId>
   		<artifactId>akka-agent</artifactId>
   	</dependency>
   	<dependency>
@@ -120,10 +124,16 @@
 			<configuration>
 				<finalName>achoo</finalName>
 				<transformers>
+					<!-- make jar exectuable -->
 					<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 						<mainClass>com.em.achoo.Achoo</mainClass>
 					</transformer>
+					<!-- merge service resources (mainly for resteasy providers) -->
 					<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- append reference.conf resources -->				
+					<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  		<resource>reference.conf</resource>
+	                </transformer>
 				</transformers>
 				<filters>
 	                <filter>
@@ -184,6 +194,11 @@
 					<artifactId>enunciate-docs</artifactId>
 					<version>1.25</version>
 				</dependency>
+				<dependency>
+					<groupId>org.codehaus.enunciate</groupId>
+					<artifactId>enunciate-xml</artifactId>
+					<version>1.25</version>
+				</dependency>				
 			</dependencies>
 		</plugin>
   	</plugins>
@@ -239,6 +254,12 @@
 	  		<artifactId>akka-remote</artifactId>
 	  		<version>${akka.version}</version>
 	  	</dependency>
+	  	<!-- clustering support -->
+	  	<dependency>
+  			<groupId>com.typesafe.akka</groupId>
+  			<artifactId>akka-cluster</artifactId>
+  			<version>${akka.version}</version>
+  		</dependency>  	
 	  	<!-- agents for shared inastances/transactional memory and atomic updates -->
 	  	<dependency>
 	  		<groupId>com.typesafe.akka</groupId>

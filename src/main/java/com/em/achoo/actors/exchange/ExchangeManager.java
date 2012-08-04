@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import scala.concurrent.Future;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.TypedActor;
 import akka.dispatch.Futures;
@@ -21,6 +22,13 @@ import com.em.achoo.model.Subscription;
 import com.em.achoo.model.UnsubscribeMessage;
 import com.em.achoo.model.interfaces.IExchange;
 
+/**
+ * Manages exchanges by routing subscription, unsubscribe, and message dispatches to implementations of the
+ * various exchange types, who forward it to subscription types.
+ * 
+ * @author chris
+ *
+ */
 public class ExchangeManager implements IExchangeManager {
 
 	private Logger logger = LoggerFactory.getLogger(ExchangeManager.class);
@@ -32,12 +40,12 @@ public class ExchangeManager implements IExchangeManager {
 		if(dispatchRef == null || dispatchRef.isTerminated()) {
 			this.logger.info("Could not route message '{}' non-existant exchange '{}'", message.getId(), exchangeName);
 			
-			return Futures.successful(true);	
+			return Futures.successful(false);	
 		}
 		
 		//send message to exchange (topic or queue) for further dispatch
 		dispatchRef.tell(message);
-
+		
 		//return response
 		return Futures.successful(true);
 	}
@@ -85,7 +93,7 @@ public class ExchangeManager implements IExchangeManager {
 	
 	private static Semaphore managerLockSemaphore = new Semaphore(1, true);
 	
-	public static IExchangeManager get() {
+	public static IExchangeManager get(ActorSystem system) {
 
 		//simple optimization, don't get lock unless you need it by 
 		//returing the instance early
@@ -120,7 +128,7 @@ public class ExchangeManager implements IExchangeManager {
 		};
 		
 		//use the creator to create our exchange manager isntance
-		IExchangeManager emActor = AchooActorSystem.INSTANCE.getTypedActor(IExchangeManager.class, creator, "achoo-exchange-manager");
+		IExchangeManager emActor = AchooActorSystem.getTypedActor(system, IExchangeManager.class, creator, "achoo-exchange-manager");
 		
 		//save instance of created manager
 		ExchangeManager.instance = emActor;

@@ -1,53 +1,86 @@
 package com.em.achoo.actors;
 
 import akka.actor.ActorSystem;
+import akka.actor.Extension;
 import akka.actor.TypedActor;
 import akka.actor.TypedProps;
+import akka.cluster.Cluster;
 import akka.japi.Creator;
 
-public enum AchooActorSystem {
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
-	INSTANCE;
+public class AchooActorSystem {
+
+	public static final String ACHOO_DEFAULT_ACTOR_SYSTEM_NAME = "achoo";
 	
-	private static final String ACHOO_ACTOR_SYSTEM_NAME = "achoo";
+	//private Logger log = LoggerFactory.getLogger(AchooActorSystem.class);
 	
 	private ActorSystem system = null;
 	
-	private AchooActorSystem() {
-		this.system = ActorSystem.create(AchooActorSystem.ACHOO_ACTOR_SYSTEM_NAME);
+	private String name = null;
+	
+	private boolean clustered = false;
+
+	public AchooActorSystem() {
+		this(AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME, null, false);
+	}
+	
+	public AchooActorSystem(boolean clustered) {
+		this(AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME, null, clustered);
+	}
+	
+	public AchooActorSystem(String name, Config configuration, boolean clustered) {
+		//save name
+		this.name = name;
+		
+		//save cluster status 
+		this.clustered = clustered;
+		
+		//if a configuration is not provided: use it
+		if(configuration == null) {
+			this.system = ActorSystem.create(this.name);
+		} else {
+			//use loaded configuration to bootstrap it
+			this.system = ActorSystem.create(this.name, configuration.withFallback(ConfigFactory.load()));
+		}
+		
+		//enable clustering
+		if(this.clustered) {
+			Cluster.apply(this.system);
+		}		
 	}
 	
 	public ActorSystem getSystem() {
 		return this.system;
 	}
 	
-	public <T> T getTypedActor(Class<T> typedActorClass) {
-		return this.getTypedActor(new TypedProps<T>(typedActorClass));
+	public static <T> T getTypedActor(ActorSystem system, Class<T> typedActorClass) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<T>(typedActorClass));
 	}
 	
-	public <T,Y extends T> T getTypedActor(Class<T> typedActorClass, Class<Y> implementingClass) {
-		return this.getTypedActor(new TypedProps<Y>(typedActorClass, implementingClass));
+	public static <T,Y extends T> T getTypedActor(ActorSystem system, Class<T> typedActorClass, Class<Y> implementingClass) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, implementingClass));
 	}
 
-	public <T, Y extends T> Y getTypedActor(Class<T> typedActorClass, Creator<Y> creator) {
-		return this.getTypedActor(new TypedProps<Y>(typedActorClass, creator));
+	public static <T, Y extends T> Y getTypedActor(ActorSystem system, Class<T> typedActorClass, Creator<Y> creator) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, creator));
 	}
 	
-	public <T> T getTypedActor(Class<T> typedActorClass, String name) {
-		return this.getTypedActor(new TypedProps<T>(typedActorClass), name);
+	public static <T> T getTypedActor(ActorSystem system, Class<T> typedActorClass, String name) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<T>(typedActorClass), name);
 	}
 	
-	public <T, Y extends T> Y getTypedActor(Class<T> typedActorClass, Creator<Y> creator, String name) {
-		return this.getTypedActor(new TypedProps<Y>(typedActorClass, creator), name);
+	public static <T, Y extends T> Y getTypedActor(ActorSystem system, Class<T> typedActorClass, Creator<Y> creator, String name) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, creator), name);
 	}
 	
-	public <T> T getTypedActor(TypedProps<T> typedProps) {
-		return this.getTypedActor(typedProps, (String)null);
+	public static <T> T getTypedActor(ActorSystem system, TypedProps<T> typedProps) {
+		return AchooActorSystem.getTypedActor(system, typedProps, (String)null);
 	}
 	
-	public <T> T getTypedActor(TypedProps<T> typedProps, String name) {
+	public static <T> T getTypedActor(ActorSystem system, TypedProps<T> typedProps, String name) {
 
-		ActorSystem system = this.getSystem();
 		T actor = null;
 		
 		if(name != null && !name.isEmpty()) {

@@ -1,9 +1,10 @@
 package com.em.achoo.actors.exchange.factory;
 
+import java.util.concurrent.Semaphore;
+
 import akka.actor.Actor;
 import akka.actor.ActorSystem;
 import akka.actor.UntypedActorFactory;
-import akka.agent.Agent;
 
 import com.em.achoo.actors.exchange.QueueExchange;
 
@@ -14,15 +15,15 @@ public class QueueExchangeRoutingFactory implements UntypedActorFactory {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private Agent<String> routerIdAgent = null;
+	private Semaphore routerChangeSemaphore = null;
 	
 	public QueueExchangeRoutingFactory(ActorSystem system) {
-		this.routerIdAgent = new Agent<String>(null, system);
+		this.routerChangeSemaphore = new Semaphore(1, true);
 	}
 	
 	@Override
 	public Actor create() {
-		return new QueueExchange(this.routerIdAgent);
+		return new QueueExchange(this.routerChangeSemaphore);
 	}
 
 }

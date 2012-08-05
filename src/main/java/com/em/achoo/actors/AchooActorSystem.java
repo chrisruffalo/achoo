@@ -1,7 +1,6 @@
 package com.em.achoo.actors;
 
 import akka.actor.ActorSystem;
-import akka.actor.Extension;
 import akka.actor.TypedActor;
 import akka.actor.TypedProps;
 import akka.cluster.Cluster;

@@ -1,75 +1,77 @@
 package com.em.achoo.actors.exchange;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
+import scala.collection.immutable.VectorBuilder;
 import akka.actor.ActorRef;
+import akka.actor.Cell;
 import akka.actor.Props;
-import akka.agent.Agent;
 import akka.routing.RoundRobinRouter;
-import akka.util.Timeout;
+import akka.routing.RoutedActorCell;
+import akka.routing.RoutedActorRef;
 
 import com.em.achoo.model.Message;
 
 public class QueueExchange extends AbstractExchange {
 	
-	private Agent<String> routerIdAgent = null;
+	private Semaphore routerChangeSemaphore = null;
 	
-	public QueueExchange(Agent<String> routerIdAgent) {
-		this.routerIdAgent = routerIdAgent;
+	private RoutedActorRef queueRouter = null;
+	
+	public QueueExchange(Semaphore routerChangeSemaphore) {
+		this.routerChangeSemaphore = routerChangeSemaphore;
 	}
 	
 	@Override
 	protected void postSubscribe(ActorRef ref) {
-		//get old router id to stop the router
-		String oldRouterId = this.routerIdAgent.await(Timeout.intToTimeout(100));
-		//manufacture new router id
-		String newRouterId = UUID.randomUUID().toString().toUpperCase();
 		
-		//create new router
-		this.createNewRouter(oldRouterId, newRouterId);
+		if(this.queueRouter == null) {
+			try {
+				this.routerChangeSemaphore.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			if(this.queueRouter == null) {
+				List<ActorRef> subscriberRef = new ArrayList<ActorRef>();
+				subscriberRef.add(ref);
+				ActorRef createdRouterRef = this.context().actorOf(new Props().withRouter(RoundRobinRouter.create(subscriberRef)));
+				if(createdRouterRef instanceof RoutedActorRef) {
+					this.queueRouter = (RoutedActorRef)createdRouterRef;
+				} else {
+					throw new IllegalStateException("Could not create a router reference, created : " + createdRouterRef.getClass().getName());
+				}
+				
+				//return
+				return;
+			}
+			
+			this.routerChangeSemaphore.release();
+		}
+		
+		//get the underlying mechanics of the routed actor and add a list of new routees... in this case *one*
+		Cell cell = this.queueRouter.underlying();
+		if(cell instanceof RoutedActorCell) {
+			RoutedActorCell routedCell = (RoutedActorCell)cell;
+			VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
+			routeeVectorBuilder.$plus$eq(ref);
+			routedCell.addRoutees(routeeVectorBuilder.result());
+		}
 	}
 
 	@Override
 	protected ActorRef sendMessage(Message message) {
-		//get router unique id
-		String routerId = this.routerIdAgent.await(Timeout.intToTimeout(100));
-		
-		//get routed ref
-		ActorRef router = this.context().actorFor(AbstractExchange.ROUTER_PREFIX + routerId);
-
-		//send message to router
-		router.tell(message);
-		
-		return router;
-	}
-	
-	/**
-	 * Swaps the router from the old router to the new router and kills the old router
-	 * 
-	 * @param oldRouterId
-	 * @param newRouterId
-	 */
-	private void createNewRouter(String oldRouterId, String newRouterId) {
-		//list of actor refs
-		List<ActorRef> routedRefs = this.getSubscribingChildren();
-		
-		//create the new router
-		this.context().actorOf(new Props().withRouter(RoundRobinRouter.create(routedRefs)), AbstractExchange.ROUTER_PREFIX + newRouterId);
-
-		//send the update to the agent so that future messages 
-		this.routerIdAgent.send(newRouterId);
-		
-		//make sure an old id exists:
-		if(oldRouterId != null) {
-			//lastly, stop the old router (may need to change this to poison pill?)
-			ActorRef router = this.context().actorFor(QueueExchange.ROUTER_PREFIX + oldRouterId);
-			if(router != null && !router.isTerminated()) {
-				//kill router
-				this.context().stop(router);					
-			}
+		if(this.queueRouter == null) {
+			return this.queueRouter;
 		}
+		
+		//send message to router
+		this.queueRouter.tell(message);		
+		
+		//return router ref
+		return this.queueRouter;
 	}
-
 
 }

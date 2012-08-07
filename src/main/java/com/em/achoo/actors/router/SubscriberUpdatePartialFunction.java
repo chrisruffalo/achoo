@@ -26,6 +26,9 @@ public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Obj
 	private Router router = null;
 	
 	public SubscriberUpdatePartialFunction(Router router) {
+		if(router == null) {
+			throw new IllegalArgumentException("Subscriber Update requires a non-null akka.routing.Router");
+		}
 		this.router = router;
 	}
 	
@@ -40,40 +43,37 @@ public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Obj
 
 	@Override
 	public BoxedUnit apply(Object x) {
-		this.logger.debug("Apply! ...: {}", x.getClass().getName());		
+		this.logger.debug("Apply function to : {} ({})", x.toString(), x.getClass().getName());		
 
 		BoxedUnit response = null;
 		
-		if(this.router != null) {
-			
-			ActorContext context = this.router.context();
-			if(context instanceof RoutedActorCell) {
-				RoutedActorCell routedCell = (RoutedActorCell)context;
-			
-				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
+		ActorContext context = this.router.context();
+		if(context instanceof RoutedActorCell) {
+			RoutedActorCell routedCell = (RoutedActorCell)context;
+		
+			VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
 
-				if(x instanceof Subscription) {
-					Subscription sub = (Subscription) x;
-					
-					String subName = ExchangeManager.SUBSCRIPTION_PREFIX + sub.getId();
-					
-					SubscriptionSenderFactory factory = new SubscriptionSenderFactory(sub);
-					Props senderProps = new Props(factory);
-					ActorRef subscriber = context.actorOf(senderProps, subName);
-					
-					routeeVectorBuilder.$plus$eq(subscriber);
-					routedCell.addRoutees(routeeVectorBuilder.result());
-				} else if(x instanceof Terminated) {
-					Terminated terminated = (Terminated)x;
-					ActorRef terminatedActor = terminated._1();
-					
-					routeeVectorBuilder.$plus$eq(terminatedActor);
-					routedCell.removeRoutees(routeeVectorBuilder.result());		
-				} else {
-					this.logger.warn("No modifications made");
-				}
-			}				
-		}
+			if(x instanceof Subscription) {
+				Subscription sub = (Subscription) x;
+				
+				String subName = ExchangeManager.SUBSCRIPTION_PREFIX + sub.getId();
+				
+				SubscriptionSenderFactory factory = new SubscriptionSenderFactory(sub);
+				Props senderProps = new Props(factory);
+				ActorRef subscriber = context.actorOf(senderProps, subName);
+				
+				routeeVectorBuilder.$plus$eq(subscriber);
+				routedCell.addRoutees(routeeVectorBuilder.result());
+			} else if(x instanceof Terminated) {
+				Terminated terminated = (Terminated)x;
+				ActorRef terminatedActor = terminated._1();
+				
+				routeeVectorBuilder.$plus$eq(terminatedActor);
+				routedCell.removeRoutees(routeeVectorBuilder.result());		
+			} else {
+				this.logger.warn("No modifications made");
+			}
+		}				
 		
 		return response;
 	}

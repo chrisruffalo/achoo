@@ -1,37 +1,36 @@
 package com.em.achoo.actors.sender;
 
-import com.em.achoo.model.Message;
-import com.em.achoo.model.subscription.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import akka.actor.UntypedActor;
+import com.em.achoo.actors.interfaces.ISender;
+import com.em.achoo.model.interfaces.ISubscription;
 
-public abstract class AbstractSender extends UntypedActor {
+public abstract class AbstractSender implements ISender {
 
-	protected abstract void send(Message message);
-		
-	private Subscription subscription = null;
+	private ISubscription subscription = null;
 	
-	private AbstractSender() {
-		
-	}
+	private Logger logger = LoggerFactory.getLogger(AbstractSender.class);
 	
-	public AbstractSender(Subscription subscription) {
-		this();
-		
-		this.subscription = subscription;
-	}
-	
-	@Override
-	public void onReceive(Object message) throws Exception {
-		
-		if(message instanceof Message) {
-			this.send((Message)message);
+	protected ISubscription getSubscription() {
+		if(this.subscription == null) {
+			throw new IllegalStateException("A sender must be initialized with a subscription before being used.");
 		}
-		
-	}	
-	
-	protected Subscription getSubscription() {
 		return this.subscription;
 	}
+
+	@Override
+	public void init(ISubscription subscription) {
+		this.subscription = subscription;
+		
+		this.logger.debug("Initialized sender for {} ({})", subscription.getId(), subscription.getClass().getName());
+	}
+
+	@Override
+	public String getName() {
+		return this.getSubscription().getId();
+	}
 	
+	
+		
 }

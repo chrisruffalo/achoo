@@ -1,11 +1,11 @@
 package com.em.achoo.actors.sender.factory;
 
-import com.em.achoo.actors.sender.HttpSender;
-import com.em.achoo.actors.sender.LocalDeliverySender;
-import com.em.achoo.model.subscription.Subscription;
-
 import akka.actor.Actor;
 import akka.actor.UntypedActorFactory;
+
+import com.em.achoo.actors.interfaces.ISender;
+import com.em.achoo.actors.sender.SenderActor;
+import com.em.achoo.model.subscription.Subscription;
 
 public class SubscriptionSenderFactory implements UntypedActorFactory {
 
@@ -28,18 +28,9 @@ public class SubscriptionSenderFactory implements UntypedActorFactory {
 
 	@Override
 	public Actor create() {
-		Actor response = null;
-		
-		switch(this.subscription.getType()) {
-			case HTTP_CALLBACK:
-				response = new HttpSender(this.subscription);
-				break;
-			case ON_DEMAND:
-				response = new LocalDeliverySender(this.subscription);
-				break;
-		}
-		
-		return response;
+		ISender sender = this.subscription.createSender();
+		SenderActor actor = new SenderActor(sender);	
+		return actor;
 	}
 	
 }

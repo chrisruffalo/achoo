@@ -12,14 +12,27 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.annotations.cache.NoCache;
+import org.jboss.resteasy.spi.NoLogWebApplicationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.util.Duration;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 
 import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.exchange.Exchange;
 import com.em.achoo.model.exchange.ExchangeType;
+import com.em.achoo.model.management.UnsubscribeMessage;
 import com.em.achoo.model.subscription.HttpSendMethod;
 import com.em.achoo.model.subscription.HttpSubscription;
+import com.em.achoo.model.subscription.OnDemandSubscription;
 import com.em.achoo.model.subscription.Subscription;
-import com.em.achoo.model.subscription.SubscriptionType;
 
 /**
  * Manages subscription information for Achoo subscribers.
@@ -30,6 +43,8 @@ import com.em.achoo.model.subscription.SubscriptionType;
 @Path("/")
 public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 
+	private Logger logger = LoggerFactory.getLogger(MessageRecieveEndpoint.class);
+	
 	/**
 	 * Subscribe to an on-demand topic.  Returns the subscription id.
 	 * 
@@ -42,6 +57,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@PUT
 	@POST
 	@Path("/subscribe/{exchangeName}/{type}/demand")
+	@NoCache
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String subscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString) {
@@ -59,13 +75,12 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		
 		exchange.setType(type);
 		
-		Subscription subscription = new Subscription();
+		Subscription subscription = new OnDemandSubscription();
 		subscription.setExchange(exchange);
-		subscription.setType(SubscriptionType.ON_DEMAND);
 
-		this.doSubscribe(subscription);
+		Subscription response = this.doSubscribe(subscription);
 		
-		return subscription.getId();
+		return response.getId();
 	}
 	
 	/**
@@ -83,6 +98,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@PUT
 	@POST
 	@Path("/subscribe/{exchangeName}/{type}/http")
+	@NoCache
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String subscribeHttp(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString, @QueryParam(value="host") String host, @QueryParam(value="port") @DefaultValue(value="-1") int port, @QueryParam(value="path") @DefaultValue(value="/") String path, @QueryParam(value="method") @DefaultValue(value="PUT") String methodString) {
@@ -118,9 +134,9 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		}
 		subscription.setMethod(method);
 		
-		this.doSubscribe(subscription);
+		Subscription response = this.doSubscribe(subscription);
 		
-		return subscription.getId();
+		return response.getId();
 	}
 	
 
@@ -135,6 +151,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@PUT
 	@POST
 	@Path("/unsubscribe/{exchangeName}/{subscriptionId}")
+	@NoCache
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String unsubscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="subscriptionId") String subscriptionId) {
@@ -152,9 +169,28 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	 * @return
 	 */
 	private boolean doUnsubscribe(String exchangeName, String subscriptionId) {
-		boolean result = this.getExchangeManager().unsubscribe(exchangeName, subscriptionId);
+		UnsubscribeMessage message = new UnsubscribeMessage();
+		message.setExchangeName(exchangeName);
+		message.setSubscriptionId(subscriptionId);
 		
-		return result;
+		Future<Object> managerUnsubscribeFuture = Patterns.ask(this.getExchangeManager(), message, Timeout.intToTimeout(1000));
+		
+		boolean response = false;
+		try {
+			Object oResponse = Await.result(managerUnsubscribeFuture, Duration.Undefined());
+			if(oResponse instanceof Boolean) {
+				response = Boolean.valueOf((Boolean) oResponse);
+			} else if(oResponse instanceof String) {
+				response = Boolean.valueOf((String) oResponse);
+			} else {
+				response = false;
+			}
+		} catch (Exception e) {
+			this.logger.error("An exception occured while unsubscribing from exchange '{}' with error = '{}'", new Object[]{exchangeName, e.getMessage()});
+			response = false;
+		}		
+		
+		return response;
 	}
 
 	/**
@@ -164,8 +200,24 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	 * @return
 	 */
 	private Subscription doSubscribe(Subscription subscription) {
-		subscription = this.getExchangeManager().subscribe(subscription);
-		return subscription;
+		Subscription subscriptionResponse = null;
+		Future<Object> response = Patterns.ask(this.getExchangeManager(), subscription, Timeout.intToTimeout(1000));
+		
+		try {
+			Object oResponse = Await.result(response, Duration.Undefined());
+			if(oResponse instanceof Subscription) {
+				subscriptionResponse = (Subscription)oResponse;
+			}
+		} catch (Exception e) {
+			this.logger.error("An exception occured while subscribing to exchange '{}' with error = '{}'", new Object[]{subscription.getExchange().getName(), e.getMessage()});
+			subscriptionResponse = null;
+		}				
+		
+		if(subscriptionResponse == null) {
+			throw new NoLogWebApplicationException(Response.status(Status.NOT_FOUND).entity("exception while subscribing").build());
+		}
+		
+		return subscriptionResponse;
 	}
 	
 }

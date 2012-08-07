@@ -27,23 +27,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.em.achoo.model.Message;
+import com.em.achoo.model.interfaces.ISubscription;
 import com.em.achoo.model.subscription.HttpSubscription;
-import com.em.achoo.model.subscription.Subscription;
 
 public class HttpSender extends AbstractSender {
 
 	private Logger logger = LoggerFactory.getLogger(HttpSender.class);			
 	
-	public HttpSender(Subscription subscription) {
-		super(subscription);
-	}
-
 	@Override
 	public void send(Message message) {
 		
-		this.logger.info("Sent message through sender at: {}", this.self().path().toString());
-		
-		Subscription subscription = this.getSubscription();
+		ISubscription subscription = this.getSubscription();
 		
 		if(!(subscription instanceof HttpSubscription)) {
 			//this is really bad, just return
@@ -124,6 +118,8 @@ public class HttpSender extends AbstractSender {
 				e.printStackTrace();
 			}
 		}
+		
+		this.logger.info("Message sent to: {}", host.getHostName() + ":" + host.getPort());
 	}
 
 }

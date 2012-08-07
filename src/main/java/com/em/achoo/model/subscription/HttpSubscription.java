@@ -1,5 +1,8 @@
 package com.em.achoo.model.subscription;
 
+import com.em.achoo.actors.interfaces.ISender;
+import com.em.achoo.actors.sender.HttpSender;
+
 public class HttpSubscription extends Subscription {
 
 	private String host = null;
@@ -43,8 +46,10 @@ public class HttpSubscription extends Subscription {
 	}
 
 	@Override
-	public SubscriptionType getType() {
-		return SubscriptionType.HTTP_CALLBACK;
+	public ISender createSender() {
+		HttpSender sender = new HttpSender();
+		sender.init(this);
+		return sender;
 	}
 	
 }

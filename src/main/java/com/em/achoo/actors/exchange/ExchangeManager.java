@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.actor.TypedActor;
 import akka.dispatch.Futures;
@@ -23,7 +24,6 @@ import com.em.achoo.actors.router.AutomaticDynamicRouterConfig;
 import com.em.achoo.actors.router.DynamicResizer;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.Subscription;
-import com.em.achoo.model.UnsubscribeMessage;
 import com.em.achoo.model.interfaces.IExchange;
 
 /**
@@ -68,21 +68,12 @@ public class ExchangeManager implements IExchangeManager {
 		if(dispatchRef == null || dispatchRef.isTerminated()) {
 			RouterConfig baseRouterConfig = null;
 			
-			//create subscription name
-			
-			//create routee list
-			//List<ActorRef> routees = new ArrayList<ActorRef>(1);
-			
-		
-			//add to 
-			
+			//create router based on type  			
 			switch(exchange.getType()) {
 				case TOPIC:
-					//dispatchRef = TypedActor.context().actorOf(new Props(new TopicExchangeRoutingFactory()), exchange.getName());
 					baseRouterConfig = new BroadcastRouter(new DynamicResizer());
 					break;
 				case QUEUE:
-					//dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory()), exchange.getName());
 					baseRouterConfig = new RoundRobinRouter(new DynamicResizer());
 					break;
 			}
@@ -91,7 +82,7 @@ public class ExchangeManager implements IExchangeManager {
 			this.logger.info("Created exchange: {} of type {} (at path: {})", new Object[]{exchange.getName(), exchange.getType(), dispatchRef.path().toString()});
 		}
 
-		//tell exchange to support subscriber
+		//tell exchange to support given subscriber subscriber
 		dispatchRef.tell(subscription);
 		
 		return subscription;
@@ -102,11 +93,10 @@ public class ExchangeManager implements IExchangeManager {
 		ActorRef subscriptionRef = TypedActor.context().actorFor(exchangeName + "/" + ExchangeManager.SUBSCRIPTION_PREFIX + subscriptionId);
 		//if there is an actor for the given subscription, notify it to shutdown
 		if(subscriptionRef != null && !subscriptionRef.isTerminated()) {
-			UnsubscribeMessage message = new UnsubscribeMessage();
-			message.setSubscriptionId(subscriptionId);
-			subscriptionRef.tell(message);
+			subscriptionRef.tell(PoisonPill.getInstance());
+			return true;
 		}		
-		return true;
+		return false;
 	}
 	
 	private volatile static IExchangeManager instance = null;
@@ -116,7 +106,7 @@ public class ExchangeManager implements IExchangeManager {
 	public static IExchangeManager get(ActorSystem system) {
 
 		//simple optimization, don't get lock unless you need it by 
-		//returing the instance early
+		//returning the instance early
 		if(ExchangeManager.instance != null) {
 			return ExchangeManager.instance;
 		}

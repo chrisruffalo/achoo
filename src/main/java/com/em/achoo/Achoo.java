@@ -159,7 +159,7 @@ public class Achoo {
 		//instantiate achoo system
 		boolean clustered = achooConfig.getBoolean("achoo.clustering");
 		String systemName = achooConfig.getString("achoo.node-name");
-		if(systemName == null || systemName.isEmpty()) {
+		if(systemName == null || systemName.isEmpty() || !clustered) {
 			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
 		}
 		

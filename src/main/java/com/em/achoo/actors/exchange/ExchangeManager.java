@@ -13,10 +13,14 @@ import akka.actor.Props;
 import akka.actor.TypedActor;
 import akka.dispatch.Futures;
 import akka.japi.Creator;
+import akka.routing.BroadcastRouter;
+import akka.routing.RoundRobinRouter;
+import akka.routing.RouterConfig;
 
 import com.em.achoo.actors.AchooActorSystem;
-import com.em.achoo.actors.exchange.factory.QueueExchangeRoutingFactory;
 import com.em.achoo.actors.interfaces.IExchangeManager;
+import com.em.achoo.actors.router.AutomaticDynamicRouterConfig;
+import com.em.achoo.actors.router.DynamicResizer;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.Subscription;
 import com.em.achoo.model.UnsubscribeMessage;
@@ -31,6 +35,8 @@ import com.em.achoo.model.interfaces.IExchange;
  */
 public class ExchangeManager implements IExchangeManager {
 
+	public static final String SUBSCRIPTION_PREFIX = "subscription-";
+	
 	private Logger logger = LoggerFactory.getLogger(ExchangeManager.class);
 	
 	@Override
@@ -54,23 +60,37 @@ public class ExchangeManager implements IExchangeManager {
 	public Subscription subscribe(Subscription subscription) {
 		
 		IExchange exchange = subscription.getExchange();
-		
-		ActorRef dispatchRef = TypedActor.context().actorFor(exchange.getName());
-		if(dispatchRef == null || dispatchRef.isTerminated()) {
-			switch(exchange.getType()) {
-				case TOPIC:
-					dispatchRef = TypedActor.context().actorOf(new Props(TopicExchange.class), exchange.getName());
-					break;
-				case QUEUE:
-					dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory(TypedActor.context().system())), exchange.getName());
-					break;
-			}
-			this.logger.info("Created exchange: {} of type {}", exchange.getName(), exchange.getType());
-		}
-		
+
 		//update subscription
 		subscription.setId(UUID.randomUUID().toString().toUpperCase());
 		
+		ActorRef dispatchRef = TypedActor.context().actorFor(exchange.getName());
+		if(dispatchRef == null || dispatchRef.isTerminated()) {
+			RouterConfig baseRouterConfig = null;
+			
+			//create subscription name
+			
+			//create routee list
+			//List<ActorRef> routees = new ArrayList<ActorRef>(1);
+			
+		
+			//add to 
+			
+			switch(exchange.getType()) {
+				case TOPIC:
+					//dispatchRef = TypedActor.context().actorOf(new Props(new TopicExchangeRoutingFactory()), exchange.getName());
+					baseRouterConfig = new BroadcastRouter(new DynamicResizer());
+					break;
+				case QUEUE:
+					//dispatchRef = TypedActor.context().actorOf(new Props(new QueueExchangeRoutingFactory()), exchange.getName());
+					baseRouterConfig = new RoundRobinRouter(new DynamicResizer());
+					break;
+			}
+			dispatchRef = TypedActor.context().actorOf(new Props().withRouter(new AutomaticDynamicRouterConfig(baseRouterConfig)), exchange.getName());
+			
+			this.logger.info("Created exchange: {} of type {} (at path: {})", new Object[]{exchange.getName(), exchange.getType(), dispatchRef.path().toString()});
+		}
+
 		//tell exchange to support subscriber
 		dispatchRef.tell(subscription);
 		
@@ -79,12 +99,12 @@ public class ExchangeManager implements IExchangeManager {
 	
 	@Override
 	public boolean unsubscribe(String exchangeName, String subscriptionId) {
-		ActorRef exchangeRef = TypedActor.context().actorFor(exchangeName);
-		//if there is an actor for the given exchange, notify it that it should shut down that subscription
-		if(exchangeRef != null && !exchangeRef.isTerminated()) {
+		ActorRef subscriptionRef = TypedActor.context().actorFor(exchangeName + "/" + ExchangeManager.SUBSCRIPTION_PREFIX + subscriptionId);
+		//if there is an actor for the given subscription, notify it to shutdown
+		if(subscriptionRef != null && !subscriptionRef.isTerminated()) {
 			UnsubscribeMessage message = new UnsubscribeMessage();
 			message.setSubscriptionId(subscriptionId);
-			exchangeRef.tell(message);
+			subscriptionRef.tell(message);
 		}		
 		return true;
 	}

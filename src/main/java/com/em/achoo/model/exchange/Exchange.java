@@ -1,4 +1,4 @@
-package com.em.achoo.model;
+package com.em.achoo.model.exchange;
 
 import com.em.achoo.model.interfaces.IExchange;
 

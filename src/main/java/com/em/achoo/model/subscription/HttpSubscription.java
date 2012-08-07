@@ -1,4 +1,4 @@
-package com.em.achoo.model;
+package com.em.achoo.model.subscription;
 
 public class HttpSubscription extends Subscription {
 

@@ -26,9 +26,9 @@ import org.apache.http.protocol.RequestTargetHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.em.achoo.model.HttpSubscription;
 import com.em.achoo.model.Message;
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.HttpSubscription;
+import com.em.achoo.model.subscription.Subscription;
 
 public class HttpSender extends AbstractSender {
 

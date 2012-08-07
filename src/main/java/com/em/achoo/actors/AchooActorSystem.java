@@ -61,7 +61,11 @@ public class AchooActorSystem {
 	public static <T,Y extends T> T getTypedActor(ActorSystem system, Class<T> typedActorClass, Class<Y> implementingClass) {
 		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, implementingClass));
 	}
-
+	
+	public static <T,Y extends T> T getTypedActor(ActorSystem system, Class<T> typedActorClass, Class<Y> implementingClass, String name) {
+		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, implementingClass), name);
+	}
+	
 	public static <T, Y extends T> Y getTypedActor(ActorSystem system, Class<T> typedActorClass, Creator<Y> creator) {
 		return AchooActorSystem.getTypedActor(system, new TypedProps<Y>(typedActorClass, creator));
 	}

@@ -28,7 +28,7 @@ import com.em.achoo.endpoint.broker.MessageRecieveEndpoint;
 import com.em.achoo.endpoint.broker.SubscriptionManagerEndpoint;
 import com.em.achoo.endpoint.management.ManagementEndpoint;
 import com.em.achoo.endpoint.test.Echo;
-import com.em.achoo.model.StartMessage;
+import com.em.achoo.model.management.StartMessage;
 import com.em.achoo.server.IServer;
 import com.em.achoo.server.ServerFactory;
 import com.em.achoo.server.ServerType;

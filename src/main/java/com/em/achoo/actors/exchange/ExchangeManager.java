@@ -12,8 +12,8 @@ import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.actor.TypedActor;
+import akka.agent.Agent;
 import akka.dispatch.Futures;
-import akka.japi.Creator;
 import akka.routing.BroadcastRouter;
 import akka.routing.RoundRobinRouter;
 import akka.routing.RouterConfig;
@@ -23,8 +23,8 @@ import com.em.achoo.actors.interfaces.IExchangeManager;
 import com.em.achoo.actors.router.AutomaticDynamicRouterConfig;
 import com.em.achoo.actors.router.DynamicResizer;
 import com.em.achoo.model.Message;
-import com.em.achoo.model.Subscription;
 import com.em.achoo.model.interfaces.IExchange;
+import com.em.achoo.model.subscription.Subscription;
 
 /**
  * Manages exchanges by routing subscription, unsubscribe, and message dispatches to implementations of the
@@ -99,55 +99,31 @@ public class ExchangeManager implements IExchangeManager {
 		return false;
 	}
 	
-	private volatile static IExchangeManager instance = null;
+	private static Agent<IExchangeManager> manager = null;
 	
-	private static Semaphore managerLockSemaphore = new Semaphore(1, true);
+	private static final String ACHOO_EXCHANGE_MANAGER_NAME = "exchange-manager";
+	
+	private static Semaphore managerLock = new Semaphore(1, true);
 	
 	public static IExchangeManager get(ActorSystem system) {
 
-		//simple optimization, don't get lock unless you need it by 
-		//returning the instance early
-		if(ExchangeManager.instance != null) {
-			return ExchangeManager.instance;
-		}
-		
-		//otherwise acquire a lock
-		try {
-			ExchangeManager.managerLockSemaphore.acquire();
-		} catch (InterruptedException e) {
-			return null;
-		}
-		
-		//check again in case the status changed while you had a lock
-		if(ExchangeManager.instance != null) {
-			return ExchangeManager.instance;
-		}
-		
-		//create an exchange manager creator that re-uses the same base instance
-		//(becomes sort of an actor based pojo-backed singleton)
-		final ExchangeManager manager = new ExchangeManager();
-		
-		//create creator
-		Creator<ExchangeManager> creator = new Creator<ExchangeManager>() {
-
-			@Override
-			public ExchangeManager create() {
-
-				return manager;
+		if(manager == null) {
+			try {
+				managerLock.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-		};
-		
-		//use the creator to create our exchange manager isntance
-		IExchangeManager emActor = AchooActorSystem.getTypedActor(system, IExchangeManager.class, creator, "achoo-exchange-manager");
-		
-		//save instance of created manager
-		ExchangeManager.instance = emActor;
-		
-		//release semaphore
-		ExchangeManager.managerLockSemaphore.release();
-		
+			
+			if(manager == null) {
+				IExchangeManager emActor = AchooActorSystem.getTypedActor(system, IExchangeManager.class, ExchangeManager.class, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
+				manager = new Agent<IExchangeManager>(emActor, system);			
+			}
+			
+			managerLock.release();
+		}		
+	
 		//return
-		return emActor;
+		return manager.get();
 	}
 	
 }

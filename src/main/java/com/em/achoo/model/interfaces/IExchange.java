@@ -1,6 +1,6 @@
 package com.em.achoo.model.interfaces;
 
-import com.em.achoo.model.ExchangeType;
+import com.em.achoo.model.exchange.ExchangeType;
 
 public interface IExchange {
 

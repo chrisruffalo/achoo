@@ -15,13 +15,14 @@ import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.SupervisorStrategy;
+import akka.actor.Terminated;
 import akka.routing.Destination;
 import akka.routing.Resizer;
 import akka.routing.RouteeProvider;
 import akka.routing.Router;
 import akka.routing.RouterConfig;
 
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.Subscription;
 
 public class AutomaticDynamicRouterConfig implements RouterConfig {
 
@@ -51,7 +52,7 @@ public class AutomaticDynamicRouterConfig implements RouterConfig {
 				boolean result = false;
 				
 				//route subscription to somewhere else
-				if(value instanceof Subscription) {
+				if(value instanceof Subscription || value instanceof Terminated) {
 					result = true;
 				}
 				
@@ -67,7 +68,7 @@ public class AutomaticDynamicRouterConfig implements RouterConfig {
 				
 				Iterable<Destination> result = null;
 				
-				if(value instanceof Subscription) {
+				if(value instanceof Subscription || value instanceof Terminated) {
 					List<Destination> destinations = new ArrayList<Destination>();
 					destinations.add(new Destination(ref, arg1.context().self()));
 					result = JavaConversions.asScalaIterable(destinations);

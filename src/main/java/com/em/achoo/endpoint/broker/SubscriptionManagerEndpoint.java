@@ -14,12 +14,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.em.achoo.endpoint.AbstractEndpoint;
-import com.em.achoo.model.Exchange;
-import com.em.achoo.model.ExchangeType;
-import com.em.achoo.model.HttpSendMethod;
-import com.em.achoo.model.HttpSubscription;
-import com.em.achoo.model.Subscription;
-import com.em.achoo.model.SubscriptionType;
+import com.em.achoo.model.exchange.Exchange;
+import com.em.achoo.model.exchange.ExchangeType;
+import com.em.achoo.model.subscription.HttpSendMethod;
+import com.em.achoo.model.subscription.HttpSubscription;
+import com.em.achoo.model.subscription.Subscription;
+import com.em.achoo.model.subscription.SubscriptionType;
 
 /**
  * Manages subscription information for Achoo subscribers.

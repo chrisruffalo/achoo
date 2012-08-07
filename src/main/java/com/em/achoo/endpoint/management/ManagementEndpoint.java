@@ -10,7 +10,7 @@ import akka.actor.ActorSystem;
 
 import com.em.achoo.actors.AchooManager;
 import com.em.achoo.endpoint.AbstractEndpoint;
-import com.em.achoo.model.StopMessage;
+import com.em.achoo.model.management.StopMessage;
 
 @Path("/management")
 public class ManagementEndpoint extends AbstractEndpoint {

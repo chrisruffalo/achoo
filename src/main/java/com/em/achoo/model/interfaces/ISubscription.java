@@ -1,6 +1,6 @@
 package com.em.achoo.model.interfaces;
 
-import com.em.achoo.model.SubscriptionType;
+import com.em.achoo.model.subscription.SubscriptionType;
 
 public interface ISubscription {
 

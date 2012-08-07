@@ -1,7 +1,7 @@
 package com.em.achoo.actors.sender;
 
 import com.em.achoo.model.Message;
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.Subscription;
 
 import akka.actor.UntypedActor;
 

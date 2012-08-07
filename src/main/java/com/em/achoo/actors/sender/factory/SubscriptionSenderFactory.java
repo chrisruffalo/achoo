@@ -2,7 +2,7 @@ package com.em.achoo.actors.sender.factory;
 
 import com.em.achoo.actors.sender.HttpSender;
 import com.em.achoo.actors.sender.LocalDeliverySender;
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.Subscription;
 
 import akka.actor.Actor;
 import akka.actor.UntypedActorFactory;

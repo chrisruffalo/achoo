@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.em.achoo.model.Message;
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.Subscription;
 
 public class LocalDeliverySender extends AbstractSender {
 

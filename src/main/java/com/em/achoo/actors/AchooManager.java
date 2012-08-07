@@ -7,8 +7,8 @@ import akka.actor.PoisonPill;
 import akka.actor.UntypedActor;
 
 import com.em.achoo.Achoo;
-import com.em.achoo.model.StartMessage;
-import com.em.achoo.model.StopMessage;
+import com.em.achoo.model.management.StartMessage;
+import com.em.achoo.model.management.StopMessage;
 
 public class AchooManager extends UntypedActor {
 

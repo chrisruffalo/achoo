@@ -1,4 +1,4 @@
-package com.em.achoo.model;
+package com.em.achoo.model.subscription;
 
 import com.em.achoo.model.interfaces.IExchange;
 import com.em.achoo.model.interfaces.ISubscription;

@@ -9,12 +9,13 @@ import scala.runtime.BoxedUnit;
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.Terminated;
 import akka.routing.RoutedActorCell;
 import akka.routing.Router;
 
 import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.actors.sender.factory.SubscriptionSenderFactory;
-import com.em.achoo.model.Subscription;
+import com.em.achoo.model.subscription.Subscription;
 
 
 public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Object, BoxedUnit> {
@@ -31,7 +32,7 @@ public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Obj
 	@Override
 	public boolean isDefinedAt(Object arg0) {
 		this.logger.debug("Checking defined for: {}", arg0.getClass().getName());
-		if(arg0 instanceof Subscription) {
+		if(arg0 instanceof Subscription || arg0 instanceof Terminated) {
 			return true;
 		}		
 		return false;
@@ -58,12 +59,27 @@ public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Obj
 				
 				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
 				routeeVectorBuilder.$plus$eq(subscriber);
-				routedCell.addRoutees(routeeVectorBuilder.result());				
+				routedCell.addRoutees(routeeVectorBuilder.result());
 			} else {
-				this.logger.info("No routees added");
+				this.logger.debug("No routees added");
 			}
 			
+		
 			response = BoxedUnit.UNIT;
+		} else if(x instanceof Terminated) {
+			Terminated terminated = (Terminated)x;
+			ActorRef terminatedActor = terminated._1();
+
+			ActorContext context = this.router.context();
+			if(context instanceof RoutedActorCell) {
+				RoutedActorCell routedCell = (RoutedActorCell)context;
+				
+				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
+				routeeVectorBuilder.$plus$eq(terminatedActor);
+				routedCell.removeRoutees(routeeVectorBuilder.result());
+			} else {
+				this.logger.debug("No routees removed");
+			}			
 		}
 				
 		return response;

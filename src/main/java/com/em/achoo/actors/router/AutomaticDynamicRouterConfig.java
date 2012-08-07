@@ -55,8 +55,6 @@ public class AutomaticDynamicRouterConfig implements RouterConfig {
 					result = true;
 				}
 				
-				LoggerFactory.getLogger(this.getClass()).debug("Result: {}", Boolean.toString(result));
-				
 				return result;
 			}
 

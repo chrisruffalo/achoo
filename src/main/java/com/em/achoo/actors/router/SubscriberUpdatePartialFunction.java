@@ -44,44 +44,37 @@ public class SubscriberUpdatePartialFunction extends AbstractPartialFunction<Obj
 
 		BoxedUnit response = null;
 		
-		if(x instanceof Subscription && this.router != null) {
-			Subscription sub = (Subscription) x;
-			
-			String subName = ExchangeManager.SUBSCRIPTION_PREFIX + sub.getId();
+		if(this.router != null) {
 			
 			ActorContext context = this.router.context();
 			if(context instanceof RoutedActorCell) {
 				RoutedActorCell routedCell = (RoutedActorCell)context;
-				
-				SubscriptionSenderFactory factory = new SubscriptionSenderFactory(sub);
-				Props senderProps = new Props(factory);
-				ActorRef subscriber = context.actorOf(senderProps, subName);
-				
-				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
-				routeeVectorBuilder.$plus$eq(subscriber);
-				routedCell.addRoutees(routeeVectorBuilder.result());
-			} else {
-				this.logger.debug("No routees added");
-			}
 			
-		
-			response = BoxedUnit.UNIT;
-		} else if(x instanceof Terminated) {
-			Terminated terminated = (Terminated)x;
-			ActorRef terminatedActor = terminated._1();
+				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
 
-			ActorContext context = this.router.context();
-			if(context instanceof RoutedActorCell) {
-				RoutedActorCell routedCell = (RoutedActorCell)context;
-				
-				VectorBuilder<ActorRef> routeeVectorBuilder = new VectorBuilder<ActorRef>();
-				routeeVectorBuilder.$plus$eq(terminatedActor);
-				routedCell.removeRoutees(routeeVectorBuilder.result());
-			} else {
-				this.logger.debug("No routees removed");
-			}			
+				if(x instanceof Subscription) {
+					Subscription sub = (Subscription) x;
+					
+					String subName = ExchangeManager.SUBSCRIPTION_PREFIX + sub.getId();
+					
+					SubscriptionSenderFactory factory = new SubscriptionSenderFactory(sub);
+					Props senderProps = new Props(factory);
+					ActorRef subscriber = context.actorOf(senderProps, subName);
+					
+					routeeVectorBuilder.$plus$eq(subscriber);
+					routedCell.addRoutees(routeeVectorBuilder.result());
+				} else if(x instanceof Terminated) {
+					Terminated terminated = (Terminated)x;
+					ActorRef terminatedActor = terminated._1();
+					
+					routeeVectorBuilder.$plus$eq(terminatedActor);
+					routedCell.removeRoutees(routeeVectorBuilder.result());		
+				} else {
+					this.logger.warn("No modifications made");
+				}
+			}				
 		}
-				
+		
 		return response;
 	}
 	

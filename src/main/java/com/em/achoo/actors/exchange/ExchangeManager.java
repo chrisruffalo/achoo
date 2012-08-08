@@ -8,17 +8,16 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.agent.Agent;
-import akka.routing.BroadcastRouter;
-import akka.routing.RoundRobinRouter;
-import akka.routing.RouterConfig;
 import akka.routing.SmallestMailboxRouter;
 
-import com.em.achoo.actors.router.AutomaticDynamicRouterConfig;
-import com.em.achoo.actors.router.DynamicResizer;
+import com.em.achoo.actors.exchange.factory.RoundRobinQueueExchangeFactory;
+import com.em.achoo.actors.exchange.factory.BroadcastTopicExchangeFactory;
+import com.em.achoo.actors.sender.SenderActor;
+import com.em.achoo.model.Envelope;
+import com.em.achoo.model.MailBag;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.interfaces.IExchange;
 import com.em.achoo.model.management.UnsubscribeMessage;
@@ -36,36 +35,54 @@ public class ExchangeManager extends UntypedActor {
 	public static final String SUBSCRIPTION_PREFIX = "subscription-";
 	
 	private Logger logger = LoggerFactory.getLogger(ExchangeManager.class);
-	
 
 	@Override
 	public void onReceive(Object arg0) throws Exception {
 		if(arg0 instanceof Message) {
-			boolean result = this.dispatch(((Message) arg0).getToExchange().getName(), (Message)arg0);
+			boolean result = this.askForMailBag(((Message) arg0).getToExchange().getName(), (Message)arg0);
 			this.sender().tell(result);
+		} else if(arg0 instanceof MailBag) {
+			this.dispatch((MailBag)arg0);
 		} else if(arg0 instanceof Subscription) {
 			Subscription result = this.subscribe((Subscription) arg0);
 			this.sender().tell(result);
 		} else if(arg0 instanceof UnsubscribeMessage) {
-			boolean result = this.unsubscribe(((UnsubscribeMessage) arg0).getExchangeName(), ((UnsubscribeMessage) arg0).getSubscriptionId());
+			boolean result = this.unsubscribe((UnsubscribeMessage) arg0);
 			this.sender().tell(result);
 		}
 	}
 	
-	
-	public boolean dispatch(String exchangeName, Message message) {
-		ActorRef dispatchRef = this.context().actorFor(exchangeName);
+	private void dispatch(MailBag arg0) {
+		ActorRef senderPool = this.context().actorFor("/user/senders");
+		if(senderPool == null || senderPool.isTerminated()) {
+			if(senderPool == null) {
+				this.logger.warn("No sender pool available at '/user/senders'.");
+			} else {
+				this.logger.warn("No sender pool available at '{}'", senderPool.path().toString());
+			}
+			return;
+		}
 		
-		if(dispatchRef == null || dispatchRef.isTerminated()) {
-			this.logger.debug("Could not route message '{}' non-existant exchange '{}'", message.getId(), exchangeName);
-			
+		//show that message is going to sender pool
+		this.logger.info("Sending message {} to sender pool to {} recipients", arg0.getMessage().getId(), arg0.getSubscriptions().size());
+		
+		for(Subscription subscription : arg0.getSubscriptions()) {
+			Envelope envelope = new Envelope(subscription, arg0.getMessage());
+			senderPool.tell(envelope);
+		}
+	}
+
+	public boolean askForMailBag(String exchangeName, Message message) {
+		ActorRef exchangeRef = this.context().actorFor(exchangeName);
+		
+		if(exchangeRef == null || exchangeRef.isTerminated()) {
+			this.logger.debug("Could create recipeients for message '{}' on non-existant exchange '{}'", message.getId(), exchangeName);
+			//respond that no exchange was available and that nothing was done
 			return false;	
-		} else {
-			this.logger.debug("Dispatched to '{}'", dispatchRef.path().toString());
 		}
 		
 		//send message to exchange (topic or queue) for further dispatch
-		dispatchRef.tell(message);
+		exchangeRef.tell(message, this.self());
 		
 		//return response
 		return true;
@@ -81,18 +98,18 @@ public class ExchangeManager extends UntypedActor {
 		ActorRef dispatchRef = this.context().actorFor(exchange.getName());
 		
 		if(dispatchRef == null || dispatchRef.isTerminated()) {
-			RouterConfig baseRouterConfig = null;
+			Props newExchangeProps = null;
 			
 			//create router based on type  			
 			switch(exchange.getType()) {
 				case TOPIC:
-					baseRouterConfig = new BroadcastRouter(new DynamicResizer());
+					newExchangeProps = new Props(new BroadcastTopicExchangeFactory(this.context()));
 					break;
 				case QUEUE:
-					baseRouterConfig = new RoundRobinRouter(new DynamicResizer());
+					newExchangeProps = new Props(new RoundRobinQueueExchangeFactory(this.context()));
 					break;
 			}
-			dispatchRef = this.context().actorOf(new Props().withRouter(new AutomaticDynamicRouterConfig(baseRouterConfig)), exchange.getName());
+			dispatchRef = this.context().actorOf(newExchangeProps, exchange.getName());
 			
 			this.logger.info("Created exchange: {} of type {} (at path: {})", new Object[]{exchange.getName(), exchange.getType(), dispatchRef.path().toString()});
 		}
@@ -104,11 +121,11 @@ public class ExchangeManager extends UntypedActor {
 	}
 	
 	
-	public boolean unsubscribe(String exchangeName, String subscriptionId) {
-		ActorRef subscriptionRef = this.context().actorFor(exchangeName + "/" + ExchangeManager.SUBSCRIPTION_PREFIX + subscriptionId);
+	public boolean unsubscribe(UnsubscribeMessage unsubscribe) {
+		ActorRef exchangeRef = this.context().actorFor(unsubscribe.getExchangeName());
 		//if there is an actor for the given subscription, notify it to shutdown
-		if(subscriptionRef != null && !subscriptionRef.isTerminated()) {
-			subscriptionRef.tell(PoisonPill.getInstance());
+		if(exchangeRef != null && !exchangeRef.isTerminated()) {
+			exchangeRef.tell(unsubscribe);
 			return true;
 		}		
 		return false;
@@ -132,6 +149,14 @@ public class ExchangeManager extends UntypedActor {
 			if(manager == null) {
 				Props exchangeManagerProps = new Props(ExchangeManager.class).withRouter(new SmallestMailboxRouter(10));
 				ActorRef newManager = system.actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
+				
+				//create pool
+				ActorRef senderPool = system.actorFor("senders"); 
+				if(senderPool == null || senderPool.isTerminated()) {
+					senderPool = system.actorOf(new Props(SenderActor.class).withRouter(new SmallestMailboxRouter(10)), "senders");
+				}
+				
+				LoggerFactory.getLogger(ExchangeManager.class).info("Created sender pool at {}", senderPool.path().toString());
 				
 				manager = new Agent<ActorRef>(newManager, system);
 			}

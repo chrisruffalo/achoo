@@ -41,7 +41,7 @@ public abstract class Subscription implements ISubscription {
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (!(obj instanceof Subscription))
 			return false;
 		Subscription other = (Subscription) obj;
 		if (id == null) {

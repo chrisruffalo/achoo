@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.runtime.AbstractFunction1;
+import akka.actor.PoisonPill;
 import akka.actor.UntypedActor;
 import akka.agent.Agent;
+import akka.util.Timeout;
 
 import com.em.achoo.model.MailBag;
 import com.em.achoo.model.Message;
@@ -74,7 +76,13 @@ public abstract class AbstractExchange extends UntypedActor {
 				return arg0;
 			}
 		});
-		this.logger.info("Removed subscriber: {} (now {})", subscriber.getSubscriptionId(), this.subscribers.get().size());
+		Collection<Subscription> subscribers = this.awaitSubscribers();
+		this.logger.info("Removed subscriber: {} (now {})", subscriber.getSubscriptionId(), subscribers.size());
+		//shutdown if empty
+		if(subscribers.size() < 1) {
+			this.logger.info("Shutting down exchange at: {}", this.self().path().toString());
+			this.self().tell(PoisonPill.getInstance());
+		}
 	}
 	
 	/**
@@ -86,6 +94,17 @@ public abstract class AbstractExchange extends UntypedActor {
 		return this.subscribers.get();
 	}
 	
+	/**
+	 * Get subscribers but wait for newest version
+	 * 
+	 * @return
+	 */
+	protected Collection<Subscription> awaitSubscribers() {
+		return this.subscribers.await(Timeout.intToTimeout(1000));
+	}
+	
 	protected abstract Collection<Subscription> getRecipientsForMessage(Message message);
+	
+	
 	
 }

@@ -39,8 +39,7 @@ public class ExchangeManager extends UntypedActor {
 	@Override
 	public void onReceive(Object arg0) throws Exception {
 		if(arg0 instanceof Message) {
-			boolean result = this.askForMailBag(((Message) arg0).getToExchange().getName(), (Message)arg0);
-			this.sender().tell(result);
+			this.askForMailBag(((Message) arg0).getToExchange().getName(), (Message)arg0);			
 		} else if(arg0 instanceof MailBag) {
 			this.dispatch((MailBag)arg0);
 		} else if(arg0 instanceof Subscription) {
@@ -64,28 +63,25 @@ public class ExchangeManager extends UntypedActor {
 		}
 		
 		//show that message is going to sender pool
-		this.logger.info("Sending message {} to sender pool to {} recipients", arg0.getMessage().getId(), arg0.getSubscriptions().size());
+		this.logger.trace("Sending message {} to sender pool to {} recipients", arg0.getMessage().getId(), arg0.getSubscriptions().size());
 		
+		//tell the sender pool router about each envelope from the mailbag
 		for(Subscription subscription : arg0.getSubscriptions()) {
 			Envelope envelope = new Envelope(subscription, arg0.getMessage());
 			senderPool.tell(envelope);
 		}
 	}
 
-	public boolean askForMailBag(String exchangeName, Message message) {
+	public void askForMailBag(String exchangeName, Message message) {
 		ActorRef exchangeRef = this.context().actorFor(exchangeName);
 		
 		if(exchangeRef == null || exchangeRef.isTerminated()) {
 			this.logger.debug("Could create recipeients for message '{}' on non-existant exchange '{}'", message.getId(), exchangeName);
-			//respond that no exchange was available and that nothing was done
-			return false;	
+			return;	
 		}
 		
 		//send message to exchange (topic or queue) for further dispatch
 		exchangeRef.tell(message, this.self());
-		
-		//return response
-		return true;
 	}
 
 	

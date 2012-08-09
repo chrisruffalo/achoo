@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.runtime.AbstractFunction1;
-import akka.actor.PoisonPill;
 import akka.actor.UntypedActor;
 import akka.agent.Agent;
 import akka.util.Timeout;
@@ -41,7 +40,7 @@ public abstract class AbstractExchange extends UntypedActor {
 			bag.setSubscriptions(recipients);
 			bag.setMessage((Message) arg0);
 			
-			this.logger.info("Telling {} about mailbag with {} recipients (message {})", new Object[]{this.sender().path().toString(), bag.getSubscriptions().size(), bag.getMessage().getId()});
+			this.logger.trace("Telling {} about mailbag with {} recipients (message {})", new Object[]{this.sender().path().toString(), bag.getSubscriptions().size(), bag.getMessage().getId()});
 			
 			//reply to the sender with the bag
 			this.sender().tell(bag);
@@ -63,7 +62,7 @@ public abstract class AbstractExchange extends UntypedActor {
 				return arg0;
 			}
 		});
-		this.logger.info("Added subscriber: {} (now {})", subscriber.getId(), this.subscribers.get().size());
+		this.logger.trace("Added subscriber: {} (now {})", subscriber.getId(), this.subscribers.get().size());
 	}
 	
 	protected void removeSubscriber(final UnsubscribeMessage subscriber) {
@@ -76,13 +75,8 @@ public abstract class AbstractExchange extends UntypedActor {
 				return arg0;
 			}
 		});
-		Collection<Subscription> subscribers = this.awaitSubscribers();
-		this.logger.info("Removed subscriber: {} (now {})", subscriber.getSubscriptionId(), subscribers.size());
-		//shutdown if empty
-		if(subscribers.size() < 1) {
-			this.logger.info("Shutting down exchange at: {}", this.self().path().toString());
-			this.self().tell(PoisonPill.getInstance());
-		}
+		Collection<Subscription> subscribers = this.getSubscribers();
+		this.logger.trace("Removed subscriber: {} (now {})", subscriber.getSubscriptionId(), subscribers.size());
 	}
 	
 	/**
@@ -91,18 +85,9 @@ public abstract class AbstractExchange extends UntypedActor {
 	 * @return
 	 */
 	protected Collection<Subscription> getSubscribers() {
-		return this.subscribers.get();
-	}
-	
-	/**
-	 * Get subscribers but wait for newest version
-	 * 
-	 * @return
-	 */
-	protected Collection<Subscription> awaitSubscribers() {
 		return this.subscribers.await(Timeout.intToTimeout(1000));
 	}
-	
+		
 	protected abstract Collection<Subscription> getRecipientsForMessage(Message message);
 	
 	

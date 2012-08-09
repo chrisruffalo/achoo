@@ -1,18 +1,27 @@
-<configuration>
+<configuration scan="true" scanPeriod="1 minute">
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
-  
-  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-    <appender-ref ref="STDOUT" />
-  </appender>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
 
-  <root level="info">
-    <appender-ref ref="ASYNC" />
-  </root>
+	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="STDOUT" />
+	</appender>
+
+	<logger name="org.jboss.weld.interceptor.util" level="ERROR" additivity="false">
+		<appender-ref ref="ASYNC" />
+	</logger>
+
+	<!-- we want weld to log into our ASYNC logger and NOT into its default logger -->
+	<logger name="org.jboss.weld" level="INFO" additivity="false">
+		<appender-ref ref="ASYNC" />
+	</logger>
+
+	<root level="info">
+		<appender-ref ref="ASYNC" />
+	</root>
 </configuration>

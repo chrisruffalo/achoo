@@ -83,7 +83,6 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		this.dispatch(message);
 		String response = "dispatched message";
 		
-		
 		//return response
 		return response;
 	}

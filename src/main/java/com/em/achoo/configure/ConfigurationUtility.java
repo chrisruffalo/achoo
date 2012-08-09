@@ -11,6 +11,11 @@ public class ConfigurationUtility {
 		
 	}
 	
+	public static Config getConfiguration(String configFileResourceName) {
+		return ConfigurationUtility.getConfiguration(null, configFileResourceName);
+	}
+	
+	
 	public static Config getConfiguration(File configFile, String configFileResourceName) {
 
 		//if the file is null, check for default
@@ -18,8 +23,13 @@ public class ConfigurationUtility {
 			configFile = new File("./" + configFileResourceName + ".conf");
 		}
 		
-		//parse found file
-		Config achooConfig = ConfigFactory.parseFile(configFile);
+		//parse found file, if it is found
+		Config achooConfig = null;
+		if(configFile.exists() && configFile.isFile()) {
+			achooConfig = ConfigFactory.parseFile(configFile);
+		} else {
+			achooConfig = ConfigFactory.empty();
+		}
 		
 		//merge with fallback onto built-in configuration file and akka defaults
 		Config resourceConfig = ConfigFactory.load(configFileResourceName);

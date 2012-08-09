@@ -12,15 +12,6 @@
 		<appender-ref ref="STDOUT" />
 	</appender>
 
-	<logger name="org.jboss.weld.interceptor.util" level="ERROR" additivity="false">
-		<appender-ref ref="ASYNC" />
-	</logger>
-
-	<!-- we want weld to log into our ASYNC logger and NOT into its default logger -->
-	<logger name="org.jboss.weld" level="INFO" additivity="false">
-		<appender-ref ref="ASYNC" />
-	</logger>
-
 	<root level="info">
 		<appender-ref ref="ASYNC" />
 	</root>

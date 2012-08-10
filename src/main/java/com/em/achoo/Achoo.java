@@ -27,7 +27,6 @@ import com.em.achoo.endpoint.FavoriteIcon;
 import com.em.achoo.endpoint.broker.MessageRecieveEndpoint;
 import com.em.achoo.endpoint.broker.SubscriptionManagerEndpoint;
 import com.em.achoo.endpoint.management.ManagementEndpoint;
-import com.em.achoo.endpoint.test.Echo;
 import com.em.achoo.server.IServer;
 import com.em.achoo.server.ServerFactory;
 import com.em.achoo.server.ServerType;
@@ -101,6 +100,10 @@ public class Achoo {
 	}
 	
 	public void start() {
+		if(this.started) {
+			return;
+		}
+		
 		//get versions 
 		String akkaVersion = this.configuration.getString("akka.version");
 		String achooVersion = this.configuration.getString("achoo.version");
@@ -128,18 +131,13 @@ public class Achoo {
 		this.log.info("Created sender pool at {}", senderPool.path().toString());
 	}
 	
-	public void startEndpoints() {
-		if(this.started) {
-			return;
-		}
-		
+	public void startEndpoints() {		
 		//create external (servlet/rest) endpoints		
 		Class<?>[] endpoints = new Class<?>[]{
 				FavoriteIcon.class,
 				ManagementEndpoint.class,
 				MessageRecieveEndpoint.class,
 				SubscriptionManagerEndpoint.class,
-				Echo.class
 		};		
 		
 		Set<IServerConfiguration> configurationSet = new HashSet<IServerConfiguration>();

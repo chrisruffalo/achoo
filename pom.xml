@@ -59,6 +59,10 @@
   		<artifactId>akka-agent</artifactId>
   	</dependency>
   	<dependency>
+  		<groupId>com.typesafe.akka</groupId>
+  		<artifactId>akka-transactor</artifactId>
+  	</dependency>	  	  	
+  	<dependency>
   		<groupId>org.slf4j</groupId>
   		<artifactId>slf4j-api</artifactId>
   	</dependency>
@@ -264,6 +268,11 @@
 	  		<artifactId>akka-agent</artifactId>
 	  		<version>${akka.version}</version>
 	  	</dependency>
+	  	<dependency>
+	  		<groupId>com.typesafe.akka</groupId>
+	  		<artifactId>akka-transactor</artifactId>
+	  		<version>${akka.version}</version>
+	  	</dependency>	  	
 	  	<!-- override for busted scala-tools version -->
 	  	<dependency>
 	  		<groupId>org.scala-tools</groupId>

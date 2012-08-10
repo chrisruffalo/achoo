@@ -10,9 +10,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorSelection;
+import scala.concurrent.util.Duration;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
@@ -43,21 +42,35 @@ public class Achoo {
 	
 	private AchooActorSystem instanceActorSystem = null;
 	
-	//private AchooCommandLine commandLine = null;
+	private AchooCommandLine commandLine = null;
 	
 	private Config configuration = null;
 	
-	public Achoo(AchooActorSystem actorSystem, AchooCommandLine commandLine, Config configuration) {
-		this.instanceActorSystem = actorSystem;
-		//this.commandLine = commandLine;
-		this.configuration = configuration;
+	public Achoo(AchooCommandLine commandLine) {
+		this.commandLine = commandLine;
+		
+		//get configuration file from command line options
+		File configFile = this.commandLine.getConfigurationFile();
+
+		//parse found file
+		this.configuration = ConfigurationUtility.getConfiguration(configFile, "achoo");		
+		
+		//instantiate achoo system
+		boolean clustered = configuration.getBoolean("achoo.clustering");
+		String systemName = configuration.getString("achoo.node-name");
+		if(systemName == null || systemName.isEmpty()) {
+			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
+		}
+		
+		//get system
+		this.instanceActorSystem = new AchooActorSystem(systemName, this.configuration, clustered);
 	}
 	
 	public void await() {
 		try {
 			this.latch.await();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			this.log.error("Could not await shutdown: {}", e.getMessage());
 		}
 	}
 	
@@ -74,6 +87,22 @@ public class Achoo {
 			}
 		}
 		
+		//get system to shut it down
+		ActorSystem achooSystem = this.instanceActorSystem.getSystem();
+		
+		//finally, shut down actor system
+		achooSystem.shutdown();
+		
+		this.log.info("Shutdown akka system... ");
+		
+		try {
+			achooSystem.awaitTermination(Duration.parse("5 seconds"));
+		} catch (Exception ex) {
+			this.log.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
+		}
+		
+		this.log.info("Akka system is shut down");
+		
 		//count down the latch, and release the main server
 		this.latch.countDown();
 	}
@@ -82,6 +111,12 @@ public class Achoo {
 		if(this.started) {
 			return;
 		}
+		
+		//get versions 
+		String akkaVersion = this.configuration.getString("akka.version");
+		String achooVersion = this.configuration.getString("achoo.version");
+		
+		this.log.info("Starting Achoo version {} (based on Akka {})", achooVersion, akkaVersion);
 
 		Class<?>[] endpoints = new Class<?>[]{
 				FavoriteIcon.class,
@@ -146,43 +181,18 @@ public class Achoo {
 			System.out.println("HALP!");
 			//quit
 			return;
-		}		
-
-		//get configuration file from command line options
-		File configFile = commandValues.getConfigurationFile();
-
-		//parse found file
-		Config achooConfig = ConfigurationUtility.getConfiguration(configFile, "achoo");		
-		
-		//instantiate achoo system
-		boolean clustered = achooConfig.getBoolean("achoo.clustering");
-		String systemName = achooConfig.getString("achoo.node-name");
-		if(systemName == null || systemName.isEmpty()) {
-			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
 		}
 		
-		//get system
-		AchooActorSystem achooSystem = new AchooActorSystem(systemName, achooConfig, clustered);
-		ActorSystem system = achooSystem.getSystem();
-		
-		//create achoo object
-		final Achoo achoo = new Achoo(achooSystem, commandValues, achooConfig); 
+		//create achoo object from command line values
+		final Achoo achoo = new Achoo(commandValues); 
 
 		//start achoo
 		achoo.start();
 		
 		//wait for kill message to come, sometime
 		achoo.await();
-		
-		//shutdown user created actors
-		ActorSelection selection = system.actorSelection("/user/*");
-		selection.tell(PoisonPill.getInstance());
-		
-		//finally, shut down actor system
-		system.shutdown();
-		system.dispatcher().shutdown();
-		system.awaitTermination();
-		
+
+		//stop
 		logger.info("Achoo akka-subsystem shutdown.");
 	}
 

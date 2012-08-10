@@ -13,8 +13,6 @@ import akka.actor.UntypedActor;
 import akka.agent.Agent;
 import akka.routing.SmallestMailboxRouter;
 
-import com.em.achoo.actors.exchange.factory.RoundRobinQueueExchangeFactory;
-import com.em.achoo.actors.exchange.factory.BroadcastTopicExchangeFactory;
 import com.em.achoo.actors.sender.SenderActor;
 import com.em.achoo.model.Envelope;
 import com.em.achoo.model.MailBag;
@@ -99,10 +97,10 @@ public class ExchangeManager extends UntypedActor {
 			//create router based on type  			
 			switch(exchange.getType()) {
 				case TOPIC:
-					newExchangeProps = new Props(new BroadcastTopicExchangeFactory(this.context()));
+					newExchangeProps = new Props(BroadcastTopicTransactorExchange.class);
 					break;
 				case QUEUE:
-					newExchangeProps = new Props(new RoundRobinQueueExchangeFactory(this.context()));
+					newExchangeProps = new Props(RoundRobinQueueTransactorExchange.class);
 					break;
 			}
 			dispatchRef = this.context().actorOf(newExchangeProps, exchange.getName());

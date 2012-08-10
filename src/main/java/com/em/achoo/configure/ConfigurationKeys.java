@@ -3,7 +3,7 @@ package com.em.achoo.configure;
 public enum ConfigurationKeys {
 
 	// attributes
-	ACHOO_ACTOR_SYSTEM("com.em.achoo.AchooActorSystem.key"),
+	ACHOO_REFERENCE("com.em.achoo.Achoo.key"),
 	ACHOO_CONFIG("com.em.achoo.Configuration.key")
 	
 	;

@@ -10,16 +10,12 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
-import akka.actor.Props;
 
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
-import com.em.achoo.actors.AchooManager;
-import com.em.achoo.actors.factory.AchooManagerFactory;
 import com.em.achoo.configure.AchooCommandLine;
 import com.em.achoo.configure.ConfigurationUtility;
 import com.em.achoo.configure.IServerConfiguration;
@@ -28,7 +24,6 @@ import com.em.achoo.endpoint.broker.MessageRecieveEndpoint;
 import com.em.achoo.endpoint.broker.SubscriptionManagerEndpoint;
 import com.em.achoo.endpoint.management.ManagementEndpoint;
 import com.em.achoo.endpoint.test.Echo;
-import com.em.achoo.model.management.StartMessage;
 import com.em.achoo.server.IServer;
 import com.em.achoo.server.ServerFactory;
 import com.em.achoo.server.ServerType;
@@ -66,12 +61,15 @@ public class Achoo {
 		}
 	}
 	
+	public AchooActorSystem getAchooActorSystem() {
+		return this.instanceActorSystem;
+	}
+	
 	public void stop() {
 		//stop servers
 		if(this.servers != null) {
 			for(IServer server : this.servers) {
 				this.log.info("Stopping server class: {}", server.getClass().getName());
-				
 				server.stop();
 			}
 		}
@@ -80,7 +78,7 @@ public class Achoo {
 		this.latch.countDown();
 	}
 	
-	public void start(StartMessage message) {
+	public void start() {
 		if(this.started) {
 			return;
 		}
@@ -111,7 +109,7 @@ public class Achoo {
 						
 			BasicServerConfiguration serverConfiguration = new BasicServerConfiguration(bindAddress, port, type, endpoints);
 			serverConfiguration.setRawConfiguration(this.configuration);
-			serverConfiguration.setAchooActorSystem(this.instanceActorSystem);
+			serverConfiguration.setAchooReference(this);
 			
 			configurationSet.add(serverConfiguration);
 		}
@@ -169,17 +167,10 @@ public class Achoo {
 		
 		//create achoo object
 		final Achoo achoo = new Achoo(achooSystem, commandValues, achooConfig); 
-		
-		//create manager factory and manage item
-		AchooManagerFactory factory = new AchooManagerFactory(achoo);
-		ActorRef ref = system.actorOf(new Props(factory), AchooManager.NAME);
-		
-		//start with akka system
-		StartMessage start = new StartMessage();
-		
-		//dispatch start message
-		ref.tell(start);
 
+		//start achoo
+		achoo.start();
+		
 		//wait for kill message to come, sometime
 		achoo.await();
 		

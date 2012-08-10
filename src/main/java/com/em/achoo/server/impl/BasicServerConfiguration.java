@@ -1,6 +1,6 @@
 package com.em.achoo.server.impl;
 
-import com.em.achoo.actors.AchooActorSystem;
+import com.em.achoo.Achoo;
 import com.em.achoo.configure.IServerConfiguration;
 import com.em.achoo.server.ServerType;
 import com.typesafe.config.Config;
@@ -17,7 +17,7 @@ public class BasicServerConfiguration implements IServerConfiguration {
 	
 	private Config rawConfiguration = null;
 	
-	private AchooActorSystem achooSystem = null;
+	private Achoo achooReference = null;
 	
 	public BasicServerConfiguration() {
 		this("0.0.0.0", 9090, ServerType.JETTY, new Class<?>[]{});
@@ -94,12 +94,12 @@ public class BasicServerConfiguration implements IServerConfiguration {
 	}
 
 	@Override
-	public AchooActorSystem getAchooActorSystem() {
-		return this.achooSystem;
+	public Achoo getAchooReference() {
+		return this.achooReference;
 	}
 	
-	public void setAchooActorSystem(AchooActorSystem achooSystem) {
-		this.achooSystem = achooSystem;
+	public void setAchooReference(Achoo reference) {
+		this.achooReference = reference;
 	}
 		
 }

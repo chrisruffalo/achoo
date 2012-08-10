@@ -11,11 +11,11 @@ import javax.ws.rs.core.MediaType;
 import org.jboss.resteasy.annotations.cache.NoCache;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
 
-import com.em.achoo.actors.AchooManager;
+import com.em.achoo.actors.management.AchooManager;
 import com.em.achoo.endpoint.AbstractEndpoint;
-import com.em.achoo.model.management.StopMessage;
 
 @Path("/management")
 public class ManagementEndpoint extends AbstractEndpoint {
@@ -28,13 +28,11 @@ public class ManagementEndpoint extends AbstractEndpoint {
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String kill() {
-		
-		ActorSystem system = this.getActorSystem();
-		
-		ActorRef ref = system.actorFor("/user/" + AchooManager.NAME);
-		
-		//kill system
-		ref.tell(new StopMessage());
+
+		ActorRef ref = this.getActorSystem().actorOf(new Props(AchooManager.class));
+	
+		ref.tell(this.getAchooReference());
+		ref.tell(PoisonPill.getInstance());
 		
 		return "killed";
 	}

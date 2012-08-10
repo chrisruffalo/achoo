@@ -10,16 +10,16 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.concurrent.util.Duration;
 import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.actor.Props;
+import akka.routing.SmallestMailboxRouter;
 
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
-import com.em.achoo.actors.AchooManager;
-import com.em.achoo.actors.factory.AchooManagerFactory;
+import com.em.achoo.actors.exchange.ExchangeManager;
+import com.em.achoo.actors.sender.SenderActor;
 import com.em.achoo.configure.AchooCommandLine;
 import com.em.achoo.configure.ConfigurationUtility;
 import com.em.achoo.configure.IServerConfiguration;
@@ -28,7 +28,6 @@ import com.em.achoo.endpoint.broker.MessageRecieveEndpoint;
 import com.em.achoo.endpoint.broker.SubscriptionManagerEndpoint;
 import com.em.achoo.endpoint.management.ManagementEndpoint;
 import com.em.achoo.endpoint.test.Echo;
-import com.em.achoo.model.management.StartMessage;
 import com.em.achoo.server.IServer;
 import com.em.achoo.server.ServerFactory;
 import com.em.achoo.server.ServerType;
@@ -48,22 +47,44 @@ public class Achoo {
 	
 	private AchooActorSystem instanceActorSystem = null;
 	
-	//private AchooCommandLine commandLine = null;
+	private AchooCommandLine commandLine = null;
 	
 	private Config configuration = null;
 	
-	public Achoo(AchooActorSystem actorSystem, AchooCommandLine commandLine, Config configuration) {
-		this.instanceActorSystem = actorSystem;
-		//this.commandLine = commandLine;
-		this.configuration = configuration;
+	public Achoo(AchooCommandLine commandLine) {
+		this.commandLine = commandLine;
+		
+		//get configuration file from command line options
+		File configFile = this.commandLine.getConfigurationFile();
+
+		//parse found file
+		this.configuration = ConfigurationUtility.getConfiguration(configFile, "achoo");		
+		
+		//instantiate achoo system
+		boolean clustered = configuration.getBoolean("achoo.clustering");
+		String systemName = configuration.getString("achoo.node-name");
+		if(systemName == null || systemName.isEmpty()) {
+			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
+		}
+		
+		//get system
+		this.instanceActorSystem = new AchooActorSystem(systemName, this.configuration, clustered);
 	}
 	
 	public void await() {
 		try {
 			this.latch.await();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			this.log.error("Could not await shutdown: {}", e.getMessage());
 		}
+	}
+	
+	public AchooActorSystem getAchooActorSystem() {
+		return this.instanceActorSystem;
+	}
+	
+	public ActorRef getExchangeManagerRef() {
+		return this.getAchooActorSystem().getSystem().actorFor("/user/" + ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
 	}
 	
 	public void stop() {
@@ -71,7 +92,6 @@ public class Achoo {
 		if(this.servers != null) {
 			for(IServer server : this.servers) {
 				this.log.info("Stopping server class: {}", server.getClass().getName());
-				
 				server.stop();
 			}
 		}
@@ -80,11 +100,40 @@ public class Achoo {
 		this.latch.countDown();
 	}
 	
-	public void start(StartMessage message) {
+	public void start() {
+		//get versions 
+		String akkaVersion = this.configuration.getString("akka.version");
+		String achooVersion = this.configuration.getString("achoo.version");
+		
+		this.log.info("Starting Achoo version {} (based on Akka {})", achooVersion, akkaVersion);
+		
+		//get sizes for pools from configuration
+		int exchangeManagerRouterSize = this.configuration.getInt("achoo.exchange-managers");
+		int senderRouterSize = this.configuration.getInt("achoo.sender-pool");		
+		
+		//create exchange manager (pool)		
+		Props exchangeManagerProps = new Props(ExchangeManager.class);
+		if(exchangeManagerRouterSize > 1) {
+			exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
+		}
+		ActorRef newManager = this.instanceActorSystem.getSystem().actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
+		this.log.info("Created exchange manager at {}", newManager.path().toString());
+		
+		//create sender pool
+		Props senderPoolProps = new Props(SenderActor.class);
+		if(senderRouterSize > 1) {
+			senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
+		}
+		ActorRef senderPool = this.instanceActorSystem.getSystem().actorOf(senderPoolProps, "senders");
+		this.log.info("Created sender pool at {}", senderPool.path().toString());
+	}
+	
+	public void startEndpoints() {
 		if(this.started) {
 			return;
 		}
-
+		
+		//create external (servlet/rest) endpoints		
 		Class<?>[] endpoints = new Class<?>[]{
 				FavoriteIcon.class,
 				ManagementEndpoint.class,
@@ -111,7 +160,7 @@ public class Achoo {
 						
 			BasicServerConfiguration serverConfiguration = new BasicServerConfiguration(bindAddress, port, type, endpoints);
 			serverConfiguration.setRawConfiguration(this.configuration);
-			serverConfiguration.setAchooActorSystem(this.instanceActorSystem);
+			serverConfiguration.setAchooReference(this);
 			
 			configurationSet.add(serverConfiguration);
 		}
@@ -135,9 +184,28 @@ public class Achoo {
 		this.started = true;
 	}
 	
+	public void close() {
+		//get system to shut it down
+		ActorSystem achooSystem = this.getAchooActorSystem().getSystem();
+		
+		//finally, shut down actor system
+		achooSystem.shutdown();
+		
+		this.log.info("Shutdown akka system... ");
+		
+		try {
+			achooSystem.awaitTermination(Duration.parse("5 seconds"));
+		} catch (Exception ex) {
+			this.log.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
+		}
+		
+		//stop
+		this.log.info("Achoo's akka-subsystem shutdown.");
+	}
+	
 	public static void main(String[] args) {
 		
-		Logger logger = LoggerFactory.getLogger(Achoo.class.getName() + "-main");
+		//Logger logger = LoggerFactory.getLogger(Achoo.class.getName() + "-main");
 		
 		//use jcommander to parse arguments
 		AchooCommandLine commandValues = new AchooCommandLine();
@@ -148,51 +216,26 @@ public class Achoo {
 			System.out.println("HALP!");
 			//quit
 			return;
-		}		
-
-		//get configuration file from command line options
-		File configFile = commandValues.getConfigurationFile();
-
-		//parse found file
-		Config achooConfig = ConfigurationUtility.getConfiguration(configFile, "achoo");		
-		
-		//instantiate achoo system
-		boolean clustered = achooConfig.getBoolean("achoo.clustering");
-		String systemName = achooConfig.getString("achoo.node-name");
-		if(systemName == null || systemName.isEmpty() || !clustered) {
-			systemName = AchooActorSystem.ACHOO_DEFAULT_ACTOR_SYSTEM_NAME;
 		}
 		
-		//get system
-		AchooActorSystem achooSystem = new AchooActorSystem(systemName, achooConfig, clustered);
-		ActorSystem system = achooSystem.getSystem();
-		
-		//create achoo object
-		final Achoo achoo = new Achoo(achooSystem, commandValues, achooConfig); 
-		
-		//create manager factory and manage item
-		AchooManagerFactory factory = new AchooManagerFactory(achoo);
-		ActorRef ref = system.actorOf(new Props(factory), AchooManager.NAME);
-		
-		//start with akka system
-		StartMessage start = new StartMessage();
-		
-		//dispatch start message
-		ref.tell(start);
+		//create achoo object from command line values
+		final Achoo achoo = new Achoo(commandValues); 
 
+		//start achoo
+		achoo.start();
+		
+		///start endpoints
+		achoo.startEndpoints();
+		
 		//wait for kill message to come, sometime
 		achoo.await();
 		
-		//shutdown user created actors
-		ActorSelection selection = system.actorSelection("/user/*");
-		selection.tell(PoisonPill.getInstance());
-		
-		//finally, shut down actor system
-		system.shutdown();
-		system.dispatcher().shutdown();
-		system.awaitTermination();
-		
-		logger.info("Achoo akka-subsystem shutdown.");
+		/*==================================================================
+		 * The Akka subsystem MUST BE shutdown outside of the achoo system 
+		 * so it is shutdown when control is returned to the main thread 
+		 * here so that Akka can stop cleanly  
+		 ==================================================================*/
+		achoo.close();
 	}
 
 	

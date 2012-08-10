@@ -6,23 +6,26 @@ import org.slf4j.LoggerFactory;
 import akka.actor.UntypedActor;
 
 import com.em.achoo.actors.interfaces.ISender;
+import com.em.achoo.model.Envelope;
 import com.em.achoo.model.Message;
+import com.em.achoo.model.subscription.Subscription;
+import com.em.achoo.senders.AbstractSender;
 
 public class SenderActor extends UntypedActor {
 
-	private ISender senderImpl = null;
-	
 	private Logger logger = LoggerFactory.getLogger(AbstractSender.class);
-	
-	public SenderActor(ISender sender) {
-		this.senderImpl = sender;
-	}
-	
+
 	@Override
-	public void onReceive(Object message) throws Exception {		
-		if(message instanceof Message) {
-			this.logger.debug("Sending {} to {} on exchange {} with impl {}", new Object[]{((Message) message).getId(), this.senderImpl.getName(), this.self().path().toString(), this.senderImpl.getClass().getName()});
-			this.senderImpl.send((Message) message);
+	public void onReceive(Object object) throws Exception {		
+		if(object instanceof Envelope) {
+			Message message = ((Envelope) object).getMessage();
+			Subscription recipient = ((Envelope) object).getRecipient();
+
+			ISender sender = recipient.createSender();
+			
+			this.logger.debug("Sending {} to {} on exchange {} with impl {}", new Object[]{message.getId(), sender.getName(), this.self().path().toString(), sender.getClass().getName()});
+			
+			sender.send(message);
 		}		
 	}	
 }

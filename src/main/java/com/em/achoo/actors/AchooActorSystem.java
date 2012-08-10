@@ -7,7 +7,6 @@ import akka.cluster.Cluster;
 import akka.japi.Creator;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 public class AchooActorSystem {
 
@@ -36,12 +35,12 @@ public class AchooActorSystem {
 		//save cluster status 
 		this.clustered = clustered;
 		
-		//if a configuration is not provided: use it
+		//if a configuration is not provided: just create named actor system and use classpath/akka reference configurations
 		if(configuration == null) {
 			this.system = ActorSystem.create(this.name);
 		} else {
 			//use loaded configuration to bootstrap it
-			this.system = ActorSystem.create(this.name, configuration.withFallback(ConfigFactory.load()));
+			this.system = ActorSystem.create(this.name, configuration);
 		}
 		
 		//enable clustering

@@ -15,22 +15,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.annotations.cache.NoCache;
-import org.jboss.resteasy.spi.NoLogWebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.util.Duration;
 import akka.actor.ActorRef;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
 
-import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.exchange.Exchange;
@@ -88,11 +79,8 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		}
 		message.setBody(content);
 
-		boolean result = this.dispatch(message);
-		String response = "ok";
-		if(!result) {
-			throw new NoLogWebApplicationException(Response.status(Status.NOT_FOUND).entity("nonexistent exchange").build());
-		}
+		this.dispatch(message);
+		String response = "dispatched message";
 		
 		//return response
 		return response;
@@ -105,33 +93,15 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 	 * @param achooMessage
 	 * @return
 	 */
-	private boolean dispatch(Message achooMessage) {
+	private void dispatch(Message achooMessage) {
 		if(achooMessage == null) {
-			return false;
+			return;
 		}
 		
 		//create system and reference for dispatch actor
-		ActorRef manager = ExchangeManager.get(this.getActorSystem());
+		ActorRef manager = this.getExchangeManager();
 		
-		//tell the dispatcher the message that was just recieved, and wait for future response
-		Future<Object> managerDispatchFuture = Patterns.ask(manager, achooMessage, Timeout.intToTimeout(1000));
-			
-		boolean response = false;
-		try {
-			Object oResponse = Await.result(managerDispatchFuture, Duration.Undefined());
-			if(oResponse instanceof Boolean) {
-				response = Boolean.valueOf((Boolean) oResponse);
-			} else if(oResponse instanceof String) {
-				response = Boolean.valueOf((String) oResponse);
-			} else {
-				response = false;
-			}
-		} catch (Exception e) {
-			this.logger.error("An exception occured while routing message '{}' to exchange '{}' with error = '{}'", new Object[]{achooMessage.getId(), achooMessage.getToExchange().getName(), e.getMessage()});
-			response = false;
-		}
-		
-		//return result
-		return response;
+		//tell the dispatcher the message that was just received
+		manager.tell(achooMessage);
 	}
 }

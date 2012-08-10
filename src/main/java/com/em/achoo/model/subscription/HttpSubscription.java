@@ -1,7 +1,7 @@
 package com.em.achoo.model.subscription;
 
 import com.em.achoo.actors.interfaces.ISender;
-import com.em.achoo.actors.sender.HttpSender;
+import com.em.achoo.senders.HttpSender;
 
 public class HttpSubscription extends Subscription {
 

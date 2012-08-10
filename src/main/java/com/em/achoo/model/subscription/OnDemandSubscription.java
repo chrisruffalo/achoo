@@ -1,7 +1,7 @@
 package com.em.achoo.model.subscription;
 
 import com.em.achoo.actors.interfaces.ISender;
-import com.em.achoo.actors.sender.OnDemandSender;
+import com.em.achoo.senders.OnDemandSender;
 
 public class OnDemandSubscription extends Subscription {
 

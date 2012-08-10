@@ -1,4 +1,4 @@
-package com.em.achoo.actors.sender;
+package com.em.achoo.senders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.em.achoo.actors.sender;
+package com.em.achoo.senders;
 
 import com.em.achoo.actors.interfaces.ISender;
 import com.em.achoo.model.Message;

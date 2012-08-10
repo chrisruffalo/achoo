@@ -1,4 +1,4 @@
-package com.em.achoo.actors.sender;
+package com.em.achoo.senders;
 
 import java.io.IOException;
 import java.net.Socket;

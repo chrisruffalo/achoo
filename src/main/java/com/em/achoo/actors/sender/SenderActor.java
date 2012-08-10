@@ -9,6 +9,7 @@ import com.em.achoo.actors.interfaces.ISender;
 import com.em.achoo.model.Envelope;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.subscription.Subscription;
+import com.em.achoo.senders.AbstractSender;
 
 public class SenderActor extends UntypedActor {
 

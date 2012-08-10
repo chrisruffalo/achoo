@@ -4,3 +4,4 @@ logs
 .settings
 .settings/*
 .project
+jmeter*

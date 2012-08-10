@@ -1,4 +1,4 @@
-package com.em.achoo.actors.sender;
+package com.em.achoo.senders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public abstract class AbstractSender implements ISender {
 	public void init(ISubscription subscription) {
 		this.subscription = subscription;
 		
-		this.logger.debug("Initialized sender for {} ({})", subscription.getId(), subscription.getClass().getName());
+		this.logger.trace("Initialized sender for {} ({})", subscription.getId(), subscription.getClass().getName());
 	}
 
 	@Override

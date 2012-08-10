@@ -6,8 +6,7 @@ import javax.ws.rs.core.Context;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
-import com.em.achoo.actors.AchooActorSystem;
-import com.em.achoo.actors.exchange.ExchangeManager;
+import com.em.achoo.Achoo;
 import com.em.achoo.configure.ConfigurationKeys;
 
 public class AbstractEndpoint {
@@ -20,15 +19,19 @@ public class AbstractEndpoint {
 	}
 	
 	protected ActorSystem getActorSystem() {
+		return this.getAchooReference().getAchooActorSystem().getSystem();
+	}
+	
+	protected Achoo getAchooReference() {
 		ServletContext servletContext = this.getContext();
 		
-		AchooActorSystem achooSystem = (AchooActorSystem)servletContext.getAttribute(ConfigurationKeys.ACHOO_ACTOR_SYSTEM.toString());
-				
-		return achooSystem.getSystem();
+		Achoo achoo = (Achoo)servletContext.getAttribute(ConfigurationKeys.ACHOO_REFERENCE.toString());
+
+		return achoo;
 	}
 	
 	protected ActorRef getExchangeManager() {
-		return ExchangeManager.get(this.getActorSystem());
+		return this.getAchooReference().getExchangeManagerRef();
 	}
 	
 }

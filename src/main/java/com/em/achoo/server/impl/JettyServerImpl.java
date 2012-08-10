@@ -63,7 +63,7 @@ public class JettyServerImpl implements IServer {
 		
 		//set attributes for contained items
 		restServletHandler.getServletContext().setAttribute(ConfigurationKeys.ACHOO_CONFIG.toString(), configuration.getRawConfiguration());
-		restServletHandler.getServletContext().setAttribute(ConfigurationKeys.ACHOO_ACTOR_SYSTEM.toString(), configuration.getAchooActorSystem());
+		restServletHandler.getServletContext().setAttribute(ConfigurationKeys.ACHOO_REFERENCE.toString(), configuration.getAchooReference());
 		
 		//set handler
 		this.jettyServer.setHandler(restServletHandler);

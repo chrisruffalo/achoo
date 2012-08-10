@@ -11,10 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.concurrent.util.Duration;
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.routing.SmallestMailboxRouter;
 
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
+import com.em.achoo.actors.exchange.ExchangeManager;
+import com.em.achoo.actors.sender.SenderActor;
 import com.em.achoo.configure.AchooCommandLine;
 import com.em.achoo.configure.ConfigurationUtility;
 import com.em.achoo.configure.IServerConfiguration;
@@ -78,6 +83,10 @@ public class Achoo {
 		return this.instanceActorSystem;
 	}
 	
+	public ActorRef getExchangeManagerRef() {
+		return this.getAchooActorSystem().getSystem().actorFor("/user/" + ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
+	}
+	
 	public void stop() {
 		//stop servers
 		if(this.servers != null) {
@@ -87,37 +96,44 @@ public class Achoo {
 			}
 		}
 		
-		//get system to shut it down
-		ActorSystem achooSystem = this.instanceActorSystem.getSystem();
-		
-		//finally, shut down actor system
-		achooSystem.shutdown();
-		
-		this.log.info("Shutdown akka system... ");
-		
-		try {
-			achooSystem.awaitTermination(Duration.parse("5 seconds"));
-		} catch (Exception ex) {
-			this.log.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
-		}
-		
-		this.log.info("Akka system is shut down");
-		
 		//count down the latch, and release the main server
 		this.latch.countDown();
 	}
 	
 	public void start() {
-		if(this.started) {
-			return;
-		}
-		
 		//get versions 
 		String akkaVersion = this.configuration.getString("akka.version");
 		String achooVersion = this.configuration.getString("achoo.version");
 		
 		this.log.info("Starting Achoo version {} (based on Akka {})", achooVersion, akkaVersion);
-
+		
+		//get sizes for pools from configuration
+		int exchangeManagerRouterSize = this.configuration.getInt("achoo.exchange-managers");
+		int senderRouterSize = this.configuration.getInt("achoo.sender-pool");		
+		
+		//create exchange manager (pool)		
+		Props exchangeManagerProps = new Props(ExchangeManager.class);
+		if(exchangeManagerRouterSize > 1) {
+			exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
+		}
+		ActorRef newManager = this.instanceActorSystem.getSystem().actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
+		this.log.info("Created exchange manager at {}", newManager.path().toString());
+		
+		//create sender pool
+		Props senderPoolProps = new Props(SenderActor.class);
+		if(senderRouterSize > 1) {
+			senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
+		}
+		ActorRef senderPool = this.instanceActorSystem.getSystem().actorOf(senderPoolProps, "senders");
+		this.log.info("Created sender pool at {}", senderPool.path().toString());
+	}
+	
+	public void startEndpoints() {
+		if(this.started) {
+			return;
+		}
+		
+		//create external (servlet/rest) endpoints		
 		Class<?>[] endpoints = new Class<?>[]{
 				FavoriteIcon.class,
 				ManagementEndpoint.class,
@@ -168,9 +184,28 @@ public class Achoo {
 		this.started = true;
 	}
 	
+	public void close() {
+		//get system to shut it down
+		ActorSystem achooSystem = this.getAchooActorSystem().getSystem();
+		
+		//finally, shut down actor system
+		achooSystem.shutdown();
+		
+		this.log.info("Shutdown akka system... ");
+		
+		try {
+			achooSystem.awaitTermination(Duration.parse("5 seconds"));
+		} catch (Exception ex) {
+			this.log.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
+		}
+		
+		//stop
+		this.log.info("Achoo's akka-subsystem shutdown.");
+	}
+	
 	public static void main(String[] args) {
 		
-		Logger logger = LoggerFactory.getLogger(Achoo.class.getName() + "-main");
+		//Logger logger = LoggerFactory.getLogger(Achoo.class.getName() + "-main");
 		
 		//use jcommander to parse arguments
 		AchooCommandLine commandValues = new AchooCommandLine();
@@ -189,11 +224,18 @@ public class Achoo {
 		//start achoo
 		achoo.start();
 		
+		///start endpoints
+		achoo.startEndpoints();
+		
 		//wait for kill message to come, sometime
 		achoo.await();
-
-		//stop
-		logger.info("Achoo akka-subsystem shutdown.");
+		
+		/*==================================================================
+		 * The Akka subsystem MUST BE shutdown outside of the achoo system 
+		 * so it is shutdown when control is returned to the main thread 
+		 * here so that Akka can stop cleanly  
+		 ==================================================================*/
+		achoo.close();
 	}
 
 	

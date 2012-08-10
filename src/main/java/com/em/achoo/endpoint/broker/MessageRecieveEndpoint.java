@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 
-import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.exchange.Exchange;
@@ -100,7 +99,7 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		}
 		
 		//create system and reference for dispatch actor
-		ActorRef manager = ExchangeManager.get(this.getActorSystem());
+		ActorRef manager = this.getExchangeManager();
 		
 		//tell the dispatcher the message that was just received
 		manager.tell(achooMessage);

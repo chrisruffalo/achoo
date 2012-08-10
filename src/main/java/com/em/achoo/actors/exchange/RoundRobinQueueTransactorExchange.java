@@ -43,5 +43,10 @@ public class RoundRobinQueueTransactorExchange  extends AbstractTransactorExchan
 		//reduce index so that one doesn't get skipped over
 		this.subscriberIndex--;
 	}
+	
+	@Override
+	protected Collection<Subscription> getSubscribers() {
+		return Collections.unmodifiableCollection(this.subscribers);
+	}
 
 }

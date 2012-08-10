@@ -7,7 +7,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 import com.em.achoo.Achoo;
-import com.em.achoo.actors.exchange.ExchangeManager;
 import com.em.achoo.configure.ConfigurationKeys;
 
 public class AbstractEndpoint {
@@ -32,7 +31,7 @@ public class AbstractEndpoint {
 	}
 	
 	protected ActorRef getExchangeManager() {
-		return ExchangeManager.get(this.getActorSystem());
+		return this.getAchooReference().getExchangeManagerRef();
 	}
 	
 }

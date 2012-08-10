@@ -31,9 +31,10 @@ public class ConfigurationUtility {
 			achooConfig = ConfigFactory.empty();
 		}
 		
-		//merge with fallback onto built-in configuration file and akka defaults
+		//merge with fallback onto built-in configuration file and achoo/akka defaults
 		Config resourceConfig = ConfigFactory.load(configFileResourceName);
-		achooConfig = achooConfig.withFallback(resourceConfig).withFallback(ConfigFactory.load());
+		Config defaultAchooResourceConfig = ConfigFactory.load("achoo-default");
+		achooConfig = achooConfig.withFallback(resourceConfig).withFallback(defaultAchooResourceConfig).withFallback(ConfigFactory.load());
 		
 		return achooConfig;		
 	}

@@ -36,4 +36,9 @@ public class BroadcastTopicTransactorExchange extends AbstractTransactorExchange
 		this.subscribers.remove(dummy);
 	}
 
+	@Override
+	protected Collection<Subscription> getSubscribers() {
+		return Collections.unmodifiableCollection(this.subscribers);
+	}
+
 }

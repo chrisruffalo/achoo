@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.routing.Broadcast;
+import akka.routing.RoundRobinRouter;
 
 import com.em.achoo.model.Message;
 import com.em.achoo.model.interfaces.IExchange;
@@ -72,13 +74,17 @@ public class ExchangeManager extends UntypedActor {
 					newExchangeProps = new Props(RoundRobinQueueTransactorExchange.class);
 					break;
 			}
+			//create dispatch router
+			newExchangeProps.withRouter(new RoundRobinRouter(5));
+			
+			//create actor ref
 			dispatchRef = this.context().actorOf(newExchangeProps, exchange.getName());
 			
 			this.logger.info("Created exchange: {} of type {} (at path: {})", new Object[]{exchange.getName(), exchange.getType(), dispatchRef.path().toString()});
 		}
 		
 		//tell exchange to support given subscriber subscriber
-		dispatchRef.tell(subscription);
+		dispatchRef.tell(new Broadcast(subscription));
 		
 		return subscription;
 	}
@@ -88,7 +94,7 @@ public class ExchangeManager extends UntypedActor {
 		ActorRef exchangeRef = this.context().actorFor(unsubscribe.getExchangeName());
 		//if there is an actor for the given subscription, notify it to shutdown
 		if(exchangeRef != null && !exchangeRef.isTerminated()) {
-			exchangeRef.tell(unsubscribe);
+			exchangeRef.tell(new Broadcast(unsubscribe));
 			return true;
 		}		
 		return false;

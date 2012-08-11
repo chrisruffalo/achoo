@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
+import akka.routing.Broadcast;
 import akka.transactor.UntypedTransactor;
 
 import com.em.achoo.model.Envelope;
@@ -26,6 +27,11 @@ public abstract class AbstractTransactorExchange extends UntypedTransactor {
 	
 	@Override
 	public void atomically(Object arg0) throws Exception {
+		//i have a feeling this isn't supposed to happen....
+		if(arg0 instanceof Broadcast) {
+			arg0 = ((Broadcast)arg0)._1();
+		}
+		
 		if(arg0 instanceof Subscription) {
 			this.addSubscriber((Subscription)arg0);
 		} else if(arg0 instanceof UnsubscribeMessage) {

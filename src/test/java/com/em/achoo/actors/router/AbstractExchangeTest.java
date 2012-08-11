@@ -46,8 +46,8 @@ public abstract class AbstractExchangeTest {
 	}
 	
 	@Test 
-	public void test100Subscribers() {
-		this.testXSubscribers(100);
+	public void test200Subscribers() {
+		this.testXSubscribers(200);
 	}
 	
 	private void testXSubscribers(int subscribers) {

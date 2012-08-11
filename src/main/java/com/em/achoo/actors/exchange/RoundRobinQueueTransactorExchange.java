@@ -23,6 +23,11 @@ public class RoundRobinQueueTransactorExchange  extends AbstractTransactorExchan
 	
 	@Override
 	protected Collection<Subscription> getRecipientsForMessage(Message message) {
+		//if there are no subscribers, fast fail with no recipients
+		if(this.subscribers.isEmpty()) {
+			return Collections.emptySet();
+		}
+		
 		int modIndex = this.subscriberIndex % this.subscribers.size();
 		Subscription subscriber = this.subscribers.get(modIndex);
 		this.subscriberIndex++;

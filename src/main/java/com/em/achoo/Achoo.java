@@ -117,7 +117,7 @@ public class Achoo {
 		//create exchange manager (pool)		
 		Props exchangeManagerProps = new Props(ExchangeManager.class);
 		if(exchangeManagerRouterSize > 1) {
-			exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
+			exchangeManagerProps = exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
 		}
 		ActorRef newManager = this.instanceActorSystem.getSystem().actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
 		this.log.info("Created exchange manager at {}", newManager.path().toString());
@@ -125,7 +125,7 @@ public class Achoo {
 		//create sender pool
 		Props senderPoolProps = new Props(SenderActor.class);
 		if(senderRouterSize > 1) {
-			senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
+			senderPoolProps = senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
 		}
 		ActorRef senderPool = this.instanceActorSystem.getSystem().actorOf(senderPoolProps, "senders");
 		this.log.info("Created sender pool at {}", senderPool.path().toString());

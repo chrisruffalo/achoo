@@ -25,6 +25,8 @@ import com.em.achoo.model.subscription.Subscription;
  */
 public class ExchangeManager extends UntypedActor {
 
+	public static final String ACHOO_EXCHANGE_MANAGER_NAME = "exchange-manager";
+	
 	public static final String SUBSCRIPTION_PREFIX = "subscription-";
 	
 	private Logger logger = LoggerFactory.getLogger(ExchangeManager.class);
@@ -74,14 +76,16 @@ public class ExchangeManager extends UntypedActor {
 					newExchangeProps = new Props(RoundRobinQueueTransactorExchange.class);
 					break;
 			}
-			//create dispatch router
-			newExchangeProps.withRouter(new RoundRobinRouter(5));
+			//create dispatch router and save properties
+			newExchangeProps = newExchangeProps.withRouter(new RoundRobinRouter(5));
 			
 			//create actor ref
 			dispatchRef = this.context().actorOf(newExchangeProps, exchange.getName());
 			
 			this.logger.info("Created exchange: {} of type {} (at path: {})", new Object[]{exchange.getName(), exchange.getType(), dispatchRef.path().toString()});
 		}
+		
+		this.logger.trace("sending dispatch subscription to: {}", dispatchRef.path().toString());
 		
 		//tell exchange to support given subscriber subscriber
 		dispatchRef.tell(new Broadcast(subscription));
@@ -99,7 +103,5 @@ public class ExchangeManager extends UntypedActor {
 		}		
 		return false;
 	}
-	
-	public static final String ACHOO_EXCHANGE_MANAGER_NAME = "exchange-manager";
 	
 }

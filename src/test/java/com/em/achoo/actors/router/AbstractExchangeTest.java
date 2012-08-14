@@ -5,9 +5,11 @@ import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
 
+import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -26,6 +28,7 @@ import com.em.achoo.model.subscription.TestSubscription;
 import com.em.achoo.model.test.Retrieve;
 import com.em.achoo.sender.TestSenderAccumulatorFactory;
 
+@RunWith(Arquillian.class)
 public abstract class AbstractExchangeTest {
 
 	private Achoo createdAchoo = null;

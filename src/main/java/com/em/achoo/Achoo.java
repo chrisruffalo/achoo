@@ -7,6 +7,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.jboss.weld.environment.se.Weld;
+import org.jboss.weld.environment.se.WeldContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +36,16 @@ import com.em.achoo.server.IServer;
 import com.em.achoo.server.ServerFactory;
 import com.em.achoo.server.ServerType;
 import com.em.achoo.server.impl.BasicServerConfiguration;
+import com.em.achoo.weld.ParametersEvent;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 
+@Singleton
 public class Achoo {
 
 	private CountDownLatch latch = new CountDownLatch(1);
 	
-	private Logger log = LoggerFactory.getLogger(Achoo.class);
+	private Logger logger = LoggerFactory.getLogger(Achoo.class);
 
 	private boolean started = false;
 	
@@ -49,7 +56,8 @@ public class Achoo {
 	private AchooCommandLine commandLine = null;
 	
 	private Config configuration = null;
-	
+
+	@Inject
 	public Achoo(AchooCommandLine commandLine) {
 		this.commandLine = commandLine;
 		
@@ -67,14 +75,14 @@ public class Achoo {
 		}
 		
 		//get system
-		this.instanceActorSystem = new AchooActorSystem(systemName, this.configuration, clustered);
+		this.instanceActorSystem = new AchooActorSystem(systemName, this.configuration, clustered);		
 	}
 	
 	public void await() {
 		try {
 			this.latch.await();
 		} catch (InterruptedException e) {
-			this.log.error("Could not await shutdown: {}", e.getMessage());
+			this.logger.error("Could not await shutdown: {}", e.getMessage());
 		}
 	}
 	
@@ -90,7 +98,7 @@ public class Achoo {
 		//stop servers
 		if(this.servers != null) {
 			for(IServer server : this.servers) {
-				this.log.info("Stopping server class: {}", server.getClass().getName());
+				this.logger.info("Stopping server class: {}", server.getClass().getName());
 				server.stop();
 			}
 		}
@@ -108,7 +116,7 @@ public class Achoo {
 		String akkaVersion = this.configuration.getString("akka.version");
 		String achooVersion = this.configuration.getString("achoo.version");
 		
-		this.log.info("Starting Achoo version {} (based on Akka {})", achooVersion, akkaVersion);
+		this.logger.info("Starting Achoo version {} (based on Akka {})", achooVersion, akkaVersion);
 		
 		//get sizes for pools from configuration
 		int exchangeManagerRouterSize = this.configuration.getInt("achoo.exchange-managers");
@@ -120,7 +128,7 @@ public class Achoo {
 			exchangeManagerProps = exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
 		}
 		ActorRef newManager = this.instanceActorSystem.getSystem().actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
-		this.log.info("Created exchange manager at {}", newManager.path().toString());
+		this.logger.info("Created exchange manager at {}", newManager.path().toString());
 		
 		//create sender pool
 		Props senderPoolProps = new Props(SenderActor.class);
@@ -128,7 +136,7 @@ public class Achoo {
 			senderPoolProps = senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
 		}
 		ActorRef senderPool = this.instanceActorSystem.getSystem().actorOf(senderPoolProps, "senders");
-		this.log.info("Created sender pool at {}", senderPool.path().toString());
+		this.logger.info("Created sender pool at {}", senderPool.path().toString());
 	}
 	
 	public void startEndpoints() {		
@@ -146,7 +154,7 @@ public class Achoo {
 		try {
 			list = this.configuration.getConfigList("achoo.servers");
 		} catch (ConfigException.Missing e) {
-			this.log.warn("No configuration found at key '{}', no HTTP endpoints will be started", "achoo.servers");
+			this.logger.warn("No configuration found at key '{}', no HTTP endpoints will be started", "achoo.servers");
 		}
 		
 		for(Config serverObject : list) {
@@ -169,13 +177,13 @@ public class Achoo {
 			IServer server = ServerFactory.getServer(serverConfig.getServerType());
 			
 			if(server != null) {
-				this.log.info("Starting {} at bind {} on port {}", new Object[]{serverConfig.getServerType(), serverConfig.getBindAddress(), serverConfig.getPort()});
+				this.logger.info("Starting {} at bind {} on port {}", new Object[]{serverConfig.getServerType(), serverConfig.getBindAddress(), serverConfig.getPort()});
 				server.start(serverConfig);
 				
 				//add to start
 				this.servers.add(server);
 			} else {
-				this.log.info("No implementation found for server type '{}'", serverConfig.getServerType());
+				this.logger.info("No implementation found for server type '{}'", serverConfig.getServerType());
 			}
 		}
 		
@@ -189,16 +197,16 @@ public class Achoo {
 		//finally, shut down actor system
 		achooSystem.shutdown();
 		
-		this.log.info("Shutdown akka system... ");
+		this.logger.info("Shutdown akka system... ");
 		
 		try {
 			achooSystem.awaitTermination(Duration.parse("5 seconds"));
 		} catch (Exception ex) {
-			this.log.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
+			this.logger.warn("Achoo's akka system was killed because it took longer than 5 seconds to shut down");
 		}
 		
 		//stop
-		this.log.info("Achoo's akka-subsystem shutdown.");
+		this.logger.info("Achoo's akka-subsystem shutdown.");
 	}
 	
 	public static void main(String[] args) {
@@ -216,8 +224,19 @@ public class Achoo {
 			return;
 		}
 		
+		Weld weldEnvironment = new Weld();
+		WeldContainer container = weldEnvironment.initialize();
+		
+		//create parameter initialize event
+		ParametersEvent parametersEvent = new ParametersEvent();
+		parametersEvent.setParameters(args);
+		container.event().select(ParametersEvent.class).fire(parametersEvent);
+		
+		//manually bootstrap/create Achoo from weld instance
+		final Achoo achoo = container.instance().select(Achoo.class).get();
+		
 		//create achoo object from command line values
-		final Achoo achoo = new Achoo(commandValues); 
+		//final Achoo achoo = new Achoo(commandValues); 
 
 		//start achoo
 		achoo.start();
@@ -234,6 +253,9 @@ public class Achoo {
 		 * here so that Akka can stop cleanly  
 		 ==================================================================*/
 		achoo.close();
+		
+		//finally, shutdown weld
+		weldEnvironment.shutdown();
 	}
 
 	

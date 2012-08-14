@@ -59,8 +59,12 @@ public class ExchangeManager extends UntypedActor {
 	public Subscription subscribe(Subscription subscription) {		
 		IExchange exchange = subscription.getExchange();
 
-		//update subscription
-		subscription.setId(UUID.randomUUID().toString().toUpperCase());
+		//update subscription, if required
+		String subscriptionId = subscription.getId();
+		if(subscriptionId == null || subscriptionId.isEmpty()) {
+			subscriptionId = UUID.randomUUID().toString().toUpperCase();
+			subscription.setId(subscriptionId);
+		}		
 		
 		ActorRef dispatchRef = this.context().actorFor(exchange.getName());
 		

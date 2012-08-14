@@ -9,11 +9,10 @@ import com.em.achoo.actors.interfaces.ISender;
 import com.em.achoo.model.Envelope;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.subscription.Subscription;
-import com.em.achoo.senders.AbstractSender;
 
 public class SenderActor extends UntypedActor {
 
-	private Logger logger = LoggerFactory.getLogger(AbstractSender.class);
+	private Logger logger = LoggerFactory.getLogger(SenderActor.class);
 
 	@Override
 	public void onReceive(Object object) throws Exception {		
@@ -23,7 +22,7 @@ public class SenderActor extends UntypedActor {
 
 			ISender sender = recipient.createSender();
 			
-			this.logger.debug("Sending {} to {} on exchange {} with impl {}", new Object[]{message.getId(), sender.getName(), this.self().path().toString(), sender.getClass().getName()});
+			this.logger.trace("Sending {} to {} on exchange {} with impl {}", new Object[]{message.getId(), sender.getName(), this.self().path().toString(), sender.getClass().getName()});
 			
 			sender.send(message);
 		}		

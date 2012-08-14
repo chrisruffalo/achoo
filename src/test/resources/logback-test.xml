@@ -10,16 +10,29 @@
 
 	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
 		<appender-ref ref="STDOUT" />
-	</appender>
+	</appender>	
 	
-	<!-- example for how to silence/overwrite other logging patterns -->
-	<!-- 
 	<logger name="org.hibernate" level="info" additivity="false">
 		<appender-ref ref="ASYNC" />
 	</logger>
-	-->
+	
+	<logger name="org.hibernate.ejb" level="error" additivity="false">
+		<appender-ref ref="ASYNC" />
+	</logger>	
+	
+	<logger name="org.jboss.weld" level="info" additivity="false">
+		<appender-ref ref="ASYNC" />
+	</logger>
+	
+	<logger level="error" name="org.jboss.weld.Bootstrap" additivity="false" >
+		<appender-ref ref="ASYNC" />
+	</logger>	
+	
+	<logger level="error" name="org.jboss.weld.interceptor.util.InterceptionTypeRegistry" additivity="false" >
+		<appender-ref ref="ASYNC" />
+	</logger>	
 
-	<root level="info">
+	<root level="debug">
 		<appender-ref ref="ASYNC" />
 	</root>
 </configuration>

@@ -5,11 +5,7 @@ import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
 
-import org.jboss.arquillian.junit.Arquillian;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -19,8 +15,7 @@ import akka.actor.Props;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 
-import com.em.achoo.Achoo;
-import com.em.achoo.configure.AchooCommandLine;
+import com.em.achoo.AchooBaseTest;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.exchange.Exchange;
 import com.em.achoo.model.subscription.Subscription;
@@ -28,11 +23,8 @@ import com.em.achoo.model.subscription.TestSubscription;
 import com.em.achoo.model.test.Retrieve;
 import com.em.achoo.sender.TestSenderAccumulatorFactory;
 
-@RunWith(Arquillian.class)
-public abstract class AbstractExchangeTest {
+public abstract class AbstractExchangeTest extends AchooBaseTest {
 
-	private Achoo createdAchoo = null;
-	
 	private static final int MESSAGE_COUNT = 5000;
 	
 	protected abstract Exchange createTestExchange();
@@ -105,23 +97,6 @@ public abstract class AbstractExchangeTest {
 		}
 	}
 	
-	@Before
-	public void setupSystem() {
-		//create new achoo system
-		this.createdAchoo = new Achoo(new AchooCommandLine());
-		
-		//start achoo system
-		this.createdAchoo.start();
-	}
-	
-	@After
-	public void killSystem() {
-		this.createdAchoo.close();
-	}
-	
-	protected Achoo getAchoo() {
-		return this.createdAchoo;
-	}
 	
 	protected ActorRef getExchangeRef() {
 		ActorRef ref = this.getAchoo().getExchangeManagerRef();		

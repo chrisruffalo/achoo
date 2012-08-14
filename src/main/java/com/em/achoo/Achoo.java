@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.environment.se.WeldContainer;
@@ -40,7 +39,6 @@ import com.em.achoo.weld.ParametersEvent;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 
-@Singleton
 public class Achoo {
 
 	private CountDownLatch latch = new CountDownLatch(1);
@@ -209,6 +207,10 @@ public class Achoo {
 		this.logger.info("Achoo's akka-subsystem shutdown.");
 	}
 	
+	public Config getConfig() {
+		return this.configuration;
+	}
+	
 	public static void main(String[] args) {
 		
 		//Logger logger = LoggerFactory.getLogger(Achoo.class.getName() + "-main");
@@ -235,9 +237,9 @@ public class Achoo {
 		//manually bootstrap/create Achoo from weld instance
 		final Achoo achoo = container.instance().select(Achoo.class).get();
 		
-		//create achoo object from command line values
-		//final Achoo achoo = new Achoo(commandValues); 
-
+		//send configuration event
+		container.event().select(Config.class).fire(achoo.configuration);
+		
 		//start achoo
 		achoo.start();
 		

@@ -138,6 +138,10 @@
 			<artifactId>hibernate-entitymanager</artifactId>
 		</dependency>
 		<dependency>
+		    <groupId>org.hsqldb</groupId>
+		    <artifactId>hsqldb</artifactId>
+		</dependency>		
+		<dependency>
 			<groupId>com.googlecode</groupId>
 			<artifactId>kryo</artifactId>
 		</dependency>
@@ -152,7 +156,11 @@
         <dependency>
 		    <groupId>org.jboss.arquillian.junit</groupId>
 		    <artifactId>arquillian-junit-container</artifactId>
-		</dependency>			
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.arquillian.container</groupId>
+		    <artifactId>arquillian-weld-se-embedded-1.1</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -404,6 +412,12 @@
 				<artifactId>hibernate-entitymanager</artifactId>
 				<version>${hibernate.version}</version>
 			</dependency>
+			<!-- jdbc driver section -->
+			<dependency>
+			    <groupId>org.hsqldb</groupId>
+			    <artifactId>hsqldb</artifactId>
+			    <version>2.2.8</version>
+			</dependency>			
 			<!-- efficient serialization -->
 			<dependency>
 				<groupId>com.googlecode</groupId>
@@ -436,6 +450,13 @@
 			    <groupId>org.jboss.arquillian.junit</groupId>
 			    <artifactId>arquillian-junit-container</artifactId>
 			    <version>1.0.2.Final</version>
+			    <scope>test</scope>
+			</dependency>
+			<!-- need a container for the junit runner to deploy arquillian to -->			
+			<dependency>
+			    <groupId>org.jboss.arquillian.container</groupId>
+			    <artifactId>arquillian-weld-se-embedded-1.1</artifactId>
+			    <version>1.0.0.CR3</version>
 			    <scope>test</scope>
 			</dependency>			
 		</dependencies>

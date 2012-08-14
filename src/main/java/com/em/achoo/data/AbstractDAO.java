@@ -3,15 +3,18 @@ package com.em.achoo.data;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+
+import com.em.achoo.weld.AchooBootstrap;
 
 
 public class AbstractDAO<T, PK extends Serializable> implements GenericDAO<T, PK> {
 
 	protected Class<T> entityClass;
 
-    @PersistenceContext
+	@Inject
+	@AchooBootstrap
     protected EntityManager entityManager;
 
     @SuppressWarnings("unchecked")

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.em.achoo.model.exchange.Exchange;
+import com.em.achoo.model.exchange.ExchangeInformation;
 
 /**
  * Internal message object inspired by JBoss ESBs message concept.  Includes an ID, simple headers and parameter support,
@@ -21,7 +21,7 @@ public class Message {
 	
 	private Map<String, Object> parameters = null;
 	
-	private Exchange toExchange = null;
+	private ExchangeInformation toExchange = null;
 	
 	private String id = null;
 	
@@ -54,11 +54,11 @@ public class Message {
 		this.id = messageId;
 	}
 		
-	public Exchange getToExchange() {
+	public ExchangeInformation getToExchange() {
 		return toExchange;
 	}
 
-	private void setToExchange(Exchange toExchange) {
+	private void setToExchange(ExchangeInformation toExchange) {
 		this.toExchange = toExchange;
 	}
 
@@ -72,7 +72,7 @@ public class Message {
 		return message;
 	}
 	
-	public static Message create(Exchange toExchange) {
+	public static Message create(ExchangeInformation toExchange) {
 		Message message = Message.create();
 		
 		message.setToExchange(toExchange);

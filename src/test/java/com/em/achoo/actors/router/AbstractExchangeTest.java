@@ -3,9 +3,12 @@ package com.em.achoo.actors.router;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
+import javax.inject.Inject;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -17,7 +20,7 @@ import akka.util.Timeout;
 
 import com.em.achoo.AchooBaseTest;
 import com.em.achoo.model.Message;
-import com.em.achoo.model.exchange.Exchange;
+import com.em.achoo.model.exchange.ExchangeInformation;
 import com.em.achoo.model.subscription.Subscription;
 import com.em.achoo.model.subscription.TestSubscription;
 import com.em.achoo.model.test.Retrieve;
@@ -25,9 +28,12 @@ import com.em.achoo.sender.TestSenderAccumulatorFactory;
 
 public abstract class AbstractExchangeTest extends AchooBaseTest {
 
+	@Inject
+	private Logger logger;
+	
 	private static final int MESSAGE_COUNT = 5000;
 	
-	protected abstract Exchange createTestExchange();
+	protected abstract ExchangeInformation createTestExchange();
 	protected abstract int calculateExpectedResponses(int subscribers);
 	
 	@Test
@@ -46,16 +52,19 @@ public abstract class AbstractExchangeTest extends AchooBaseTest {
 	}
 	
 	private void testXSubscribers(int subscribers) {
+		//log test start
+		this.logger.info("Starting test run for {} subscribers", subscribers);
+		
 		int expectedResponses = this.calculateExpectedResponses(subscribers) * AbstractExchangeTest.MESSAGE_COUNT;
 		CountDownLatch latch = new CountDownLatch(expectedResponses);
 		ActorRef accumulator = this.accumulatorRef(latch);
 		
-		Exchange exchange = this.createTestExchange();
+		ExchangeInformation exchange = this.createTestExchange();
 		
 		//create subscribers
 		for(int i = 0; i < subscribers; i++) {
 			Subscription subscription = new TestSubscription(accumulator);
-			subscription.setExchange(exchange);
+			subscription.setExchangeInformation(exchange);
 			this.subscribe(subscription);
 		}
 		
@@ -75,6 +84,9 @@ public abstract class AbstractExchangeTest extends AchooBaseTest {
 		
 		//assert
 		Assert.assertEquals(expectedResponses, sent);		
+		
+		//log
+		this.logger.info("Got {} messages, as expected", sent);
 	}
 	
 	private void subscribe(Subscription subscription) {

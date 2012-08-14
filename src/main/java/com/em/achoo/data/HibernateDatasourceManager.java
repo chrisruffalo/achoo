@@ -88,6 +88,12 @@ public class HibernateDatasourceManager {
 		configuration.put("javax.persistence.jdbc.user", user);
 		configuration.put("javax.persistence.jdbc.password", password);
 		configuration.put("hibernate.hbm2ddl.auto", "update");
+		
+		//configure c3p0 connection pooling
+		configuration.put("hibernate.c3p0.min_size", "1");
+		configuration.put("hibernate.c3p0.max_size", "5");
+		configuration.put("hibernate.c3p0.timeout", "1800");
+		configuration.put("hibernate.c3p0.max_statements", "50");
 
 		//create persistence factory
 		this.factory = Persistence.createEntityManagerFactory(name, configuration);

@@ -1,17 +1,19 @@
 package com.em.achoo.model.management;
 
+import com.em.achoo.model.exchange.ExchangeInformation;
+
 public class UnsubscribeMessage {
 
-	private String exchangeName;
+	private ExchangeInformation exchange;
 	
 	private String subscriptionId;
 
-	public String getExchangeName() {
-		return exchangeName;
+	public ExchangeInformation getExchangeInformation() {
+		return exchange;
 	}
 
-	public void setExchangeName(String exchangeName) {
-		this.exchangeName = exchangeName;
+	public void setExchangeInformation(ExchangeInformation exchange) {
+		this.exchange = exchange;
 	}
 
 	public String getSubscriptionId() {

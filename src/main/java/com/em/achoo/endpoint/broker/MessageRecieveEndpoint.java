@@ -24,7 +24,7 @@ import akka.actor.ActorRef;
 
 import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Message;
-import com.em.achoo.model.exchange.Exchange;
+import com.em.achoo.model.exchange.ExchangeInformation;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -55,7 +55,7 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String send(@PathParam(value="exchangeName") String name, @Context HttpServletRequest request) {
 		//create message
-		Exchange exchange = new Exchange();
+		ExchangeInformation exchange = new ExchangeInformation();
 		exchange.setName(name);
 		Message message = Message.create(exchange);
 		

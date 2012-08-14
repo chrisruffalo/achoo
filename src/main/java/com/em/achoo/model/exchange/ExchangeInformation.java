@@ -1,8 +1,7 @@
 package com.em.achoo.model.exchange;
 
-import com.em.achoo.model.interfaces.IExchange;
 
-public class Exchange implements IExchange {
+public class ExchangeInformation {
 
 	private String name = null;
 	
@@ -16,14 +15,16 @@ public class Exchange implements IExchange {
 		this.type = type;
 	}
 	
-	@Override
 	public String getName() {
 		return this.name;
 	}
 
-	@Override
 	public ExchangeType getType() {
 		return this.type;
+	}
+	
+	public String toString() {
+		return String.format("Exchange={Name=%s, Type=%s}", this.getName(), this.getType());
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class Exchange implements IExchange {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Exchange other = (Exchange) obj;
+		ExchangeInformation other = (ExchangeInformation) obj;
 		if (name == null) {
 			if (other.name != null)
 				return false;

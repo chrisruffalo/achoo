@@ -7,10 +7,14 @@
 			</pattern>
 		</encoder>
 	</appender>
-
+		
 	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
 		<appender-ref ref="STDOUT" />
 	</appender>	
+		
+	<logger name="com.mchange.v2" level="info" additivity="false">
+		<appender-ref ref="ASYNC"/>
+	</logger>	
 	
 	<logger name="org.hibernate" level="info" additivity="false">
 		<appender-ref ref="ASYNC" />

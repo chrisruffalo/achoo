@@ -26,7 +26,7 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 
 import com.em.achoo.endpoint.AbstractEndpoint;
-import com.em.achoo.model.exchange.Exchange;
+import com.em.achoo.model.exchange.ExchangeInformation;
 import com.em.achoo.model.exchange.ExchangeType;
 import com.em.achoo.model.management.UnsubscribeMessage;
 import com.em.achoo.model.subscription.HttpSendMethod;
@@ -62,7 +62,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String subscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString) {
 
-		Exchange exchange = new Exchange();
+		ExchangeInformation exchange = new ExchangeInformation();
 		exchange.setName(exchangeName);
 		
 		typeString = typeString == null ? "TOPIC" : typeString.toUpperCase();
@@ -76,7 +76,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		exchange.setType(type);
 		
 		Subscription subscription = new OnDemandSubscription();
-		subscription.setExchange(exchange);
+		subscription.setExchangeInformation(exchange);
 
 		Subscription response = this.doSubscribe(subscription);
 		
@@ -103,25 +103,19 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@Produces(value={MediaType.TEXT_PLAIN})
 	public String subscribeHttp(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString, @QueryParam(value="host") String host, @QueryParam(value="port") @DefaultValue(value="-1") int port, @QueryParam(value="path") @DefaultValue(value="/") String path, @QueryParam(value="method") @DefaultValue(value="PUT") String methodString) {
 
-		Exchange exchange = new Exchange();
+		ExchangeInformation exchange = new ExchangeInformation();
 		exchange.setName(exchangeName);
 		
 		if(null == host || port < 0) {
 			return "host or port was not specified";
 		}
 		
-		typeString = typeString == null ? "TOPIC" : typeString.toUpperCase();
-		ExchangeType type = null;
-		try {
-			type = ExchangeType.valueOf(typeString);
-		} catch (EnumConstantNotPresentException ex) {
-			type = ExchangeType.TOPIC;
-		}
+		ExchangeType type = this.stringToExchangeType(typeString);
 		
 		exchange.setType(type);
 		
 		HttpSubscription subscription = new HttpSubscription();
-		subscription.setExchange(exchange);
+		subscription.setExchangeInformation(exchange);
 		subscription.setHost(host);
 		subscription.setPort(port);
 		subscription.setPath(path);
@@ -150,27 +144,36 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@GET
 	@PUT
 	@POST
-	@Path("/unsubscribe/{exchangeName}/{subscriptionId}")
+	@Path("/unsubscribe/{exchangeName}/{type}/{subscriptionId}")
 	@NoCache
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
-	public String unsubscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="subscriptionId") String subscriptionId) {
+	public String unsubscribe(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString, @PathParam(value="subscriptionId") String subscriptionId) {
 		if(exchangeName == null || exchangeName.isEmpty() || subscriptionId == null || subscriptionId.isEmpty()) {
 			throw new WebApplicationException(Response.status(404).entity("no exchange or subscriptionid given").build());
 		}		
-		return Boolean.toString(this.doUnsubscribe(exchangeName, subscriptionId));
+		
+		ExchangeType type = this.stringToExchangeType(typeString);
+		
+		ExchangeInformation information = new ExchangeInformation();
+		information.setName(exchangeName);
+		information.setType(type);		
+		
+		return Boolean.toString(this.doUnsubscribe(information, subscriptionId));
 	}
 	
 	/**
 	 * Implments the unsubscribe action, called by various unsubscribe methods so that they can focus on REST aspects
 	 * 
-	 * @param exchangeName the exchange to unsubscribe from
+	 * @param info the information for the exchange to unsubscribe from
 	 * @param subscriptionId subscription uuid given when the original subscribe method was called
 	 * @return
 	 */
-	private boolean doUnsubscribe(String exchangeName, String subscriptionId) {
+	private boolean doUnsubscribe(ExchangeInformation info, String subscriptionId) {
 		UnsubscribeMessage message = new UnsubscribeMessage();
-		message.setExchangeName(exchangeName);
+		
+		message.setExchangeInformation(info);
+
 		message.setSubscriptionId(subscriptionId);
 		
 		Future<Object> managerUnsubscribeFuture = Patterns.ask(this.getExchangeManager(), message, Timeout.intToTimeout(1000));
@@ -186,7 +189,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 				response = false;
 			}
 		} catch (Exception e) {
-			this.logger.error("An exception occured while unsubscribing from exchange '{}' with error = '{}'", new Object[]{exchangeName, e.getMessage()});
+			this.logger.error("An exception occured while unsubscribing from exchange '{}' with error = '{}'", new Object[]{info.toString(), e.getMessage()});
 			response = false;
 		}		
 		
@@ -209,7 +212,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 				subscriptionResponse = (Subscription)oResponse;
 			}
 		} catch (Exception e) {
-			this.logger.error("An exception occured while subscribing to exchange '{}' with error = '{}'", new Object[]{subscription.getExchange().getName(), e.getMessage()});
+			this.logger.error("An exception occured while subscribing to exchange '{}' with error = '{}'", new Object[]{subscription.getExchangeInformation().getName(), e.getMessage()});
 			subscriptionResponse = null;
 		}				
 		
@@ -220,4 +223,14 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		return subscriptionResponse;
 	}
 	
+	private ExchangeType stringToExchangeType(String typeString) {
+		typeString = typeString == null ? "TOPIC" : typeString.toUpperCase();
+		ExchangeType type = null;
+		try {
+			type = ExchangeType.valueOf(typeString);
+		} catch (EnumConstantNotPresentException ex) {
+			type = ExchangeType.TOPIC;
+		}
+		return type;
+	}
 }

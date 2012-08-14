@@ -2,9 +2,12 @@ package com.em.achoo.data;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import com.em.achoo.weld.AchooBootstrap;
 
@@ -24,7 +27,7 @@ public class AbstractDAO<T, PK extends Serializable> implements GenericDAO<T, PK
     }
 
     @Override
-    public T create(T t) {
+    public T persist(T t) {
         this.entityManager.persist(t);
         return t;
     }
@@ -45,6 +48,16 @@ public class AbstractDAO<T, PK extends Serializable> implements GenericDAO<T, PK
         this.entityManager.remove(t);
     }
     
+    @Override
+	public List<T> list() {
+		//create
+    	CriteriaBuilder builder = this.entityManager.getEntityManagerFactory().getCriteriaBuilder();
+    	
+    	//create query
+    	CriteriaQuery<T> query = builder.createQuery(this.entityClass);
+    	
+    	return this.entityManager.createQuery(query).getResultList();
+    }
    
 
 }

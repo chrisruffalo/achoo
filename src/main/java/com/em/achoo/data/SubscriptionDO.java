@@ -7,7 +7,7 @@ import javax.persistence.Id;
 import com.em.achoo.model.exchange.ExchangeType;
 
 @Entity(name="subscription")
-public class SubscriptionContainer {
+public class SubscriptionDO {
 
 	@Id
 	@Column(name="id")
@@ -55,5 +55,8 @@ public class SubscriptionContainer {
 	public void setExchangeType(ExchangeType exchangeType) {
 		this.exchangeType = exchangeType;
 	}	
+	
+	/*============================================================================*/
+	
 	
 }

@@ -1,13 +1,13 @@
 package com.em.achoo.model.subscription;
 
-import com.em.achoo.model.interfaces.IExchange;
+import com.em.achoo.model.exchange.ExchangeInformation;
 import com.em.achoo.model.interfaces.ISubscription;
 
 public abstract class Subscription implements ISubscription {
 
 	private String id = null;
 	
-	private IExchange exchange = null;
+	private ExchangeInformation exchangeInformation = null;
 	
 	@Override
 	public String getId() {
@@ -15,16 +15,16 @@ public abstract class Subscription implements ISubscription {
 	}
 
 	@Override
-	public IExchange getExchange() {
-		return this.exchange;
+	public ExchangeInformation getExchangeInformation() {
+		return this.exchangeInformation;
 	}
 
 	public void setId(String id) {
 		this.id = id;
 	}
 
-	public void setExchange(IExchange exchange) {
-		this.exchange = exchange;
+	public void setExchangeInformation(ExchangeInformation exchange) {
+		this.exchangeInformation = exchange;
 	}
 
 	@Override

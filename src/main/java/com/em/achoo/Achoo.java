@@ -23,6 +23,8 @@ import akka.routing.SmallestMailboxRouter;
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
 import com.em.achoo.actors.exchange.ExchangeManager;
+import com.em.achoo.actors.exchange.factory.ExchangeManagerFactory;
+import com.em.achoo.actors.exchange.storage.impl.memory.InMemoryExchangeStorage;
 import com.em.achoo.actors.sender.SenderActor;
 import com.em.achoo.configure.AchooCommandLine;
 import com.em.achoo.configure.ConfigurationUtility;
@@ -120,8 +122,9 @@ public class Achoo {
 		int exchangeManagerRouterSize = this.configuration.getInt("achoo.exchange-managers");
 		int senderRouterSize = this.configuration.getInt("achoo.sender-pool");		
 		
-		//create exchange manager (pool)		
-		Props exchangeManagerProps = new Props(ExchangeManager.class);
+		//create exchange manager (pool)
+		ExchangeManagerFactory factory = new ExchangeManagerFactory(new InMemoryExchangeStorage());
+		Props exchangeManagerProps = new Props(factory);
 		if(exchangeManagerRouterSize > 1) {
 			exchangeManagerProps = exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
 		}

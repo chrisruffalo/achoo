@@ -199,13 +199,20 @@
 						</transformer>
 					</transformers>
 					<filters>
+						<!-- exclude signatures from all artifacts -->
 						<filter>
-							<!-- exclude signatures from all artifacts -->
 							<artifact>*:*</artifact>
 							<excludes>
 								<exclude>META-INF/*.SF</exclude>
 								<exclude>META-INF/*.DSA</exclude>
 								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+						<!-- exclude random beans files -->
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/jboss-beans.xml</exclude>
 							</excludes>
 						</filter>
 					</filters>
@@ -345,6 +352,11 @@
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-ext</artifactId>
 				<version>${slf4j.version}</version>
 			</dependency>
 			<dependency>

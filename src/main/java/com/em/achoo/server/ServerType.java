@@ -1,8 +1,7 @@
 package com.em.achoo.server;
 
 public enum ServerType {
-	JETTY,
-	TJWS
+	JETTY
 	;
 	
 	public static ServerType getServerForString(String serverType) {

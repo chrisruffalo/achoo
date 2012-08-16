@@ -18,7 +18,7 @@ public enum ServerType {
 		try {
 			type = ServerType.valueOf(serverType);
 		} catch(EnumConstantNotPresentException ex) {
-			//netty as default server
+			//jetty as default server
 			type = ServerType.JETTY;
 		}
 		return type;

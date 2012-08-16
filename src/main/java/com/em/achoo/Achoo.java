@@ -18,7 +18,7 @@ import scala.concurrent.util.Duration;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.routing.SmallestMailboxRouter;
+import akka.routing.RoundRobinRouter;
 
 import com.beust.jcommander.JCommander;
 import com.em.achoo.actors.AchooActorSystem;
@@ -126,7 +126,7 @@ public class Achoo {
 		ExchangeManagerFactory factory = new ExchangeManagerFactory(new InMemoryExchangeStorage());
 		Props exchangeManagerProps = new Props(factory);
 		if(exchangeManagerRouterSize > 1) {
-			exchangeManagerProps = exchangeManagerProps.withRouter(new SmallestMailboxRouter(exchangeManagerRouterSize));
+			exchangeManagerProps = exchangeManagerProps.withRouter(new RoundRobinRouter(exchangeManagerRouterSize));
 		}
 		ActorRef newManager = this.instanceActorSystem.getSystem().actorOf(exchangeManagerProps, ExchangeManager.ACHOO_EXCHANGE_MANAGER_NAME);
 		this.logger.info("Created exchange manager at {}", newManager.path().toString());
@@ -134,7 +134,7 @@ public class Achoo {
 		//create sender pool
 		Props senderPoolProps = new Props(SenderActor.class);
 		if(senderRouterSize > 1) {
-			senderPoolProps = senderPoolProps.withRouter(new SmallestMailboxRouter(senderRouterSize));
+			senderPoolProps = senderPoolProps.withRouter(new RoundRobinRouter(senderRouterSize));
 		}
 		ActorRef senderPool = this.instanceActorSystem.getSystem().actorOf(senderPoolProps, "senders");
 		this.logger.info("Created sender pool at {}", senderPool.path().toString());
@@ -194,6 +194,10 @@ public class Achoo {
 	public void close() {
 		//get system to shut it down
 		ActorSystem achooSystem = this.getAchooActorSystem().getSystem();
+		
+		int through = achooSystem.dispatcher().throughput();
+		
+		this.logger.info("Dispatcher dispatched: {}", through);
 		
 		//finally, shut down actor system
 		achooSystem.shutdown();

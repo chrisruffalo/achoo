@@ -1,5 +1,6 @@
 package com.em.achoo.actors.router;
 
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -52,6 +53,9 @@ public abstract class AbstractExchangeTest extends AchooBaseTest {
 	}
 	
 	private void testXSubscribers(int subscribers) {
+		//get base time and dispatch status
+		Date startDate = new Date();
+		
 		//log test start
 		this.logger.info("Starting test run for {} subscribers", subscribers);
 		
@@ -87,6 +91,15 @@ public abstract class AbstractExchangeTest extends AchooBaseTest {
 		
 		//log
 		this.logger.info("Got {} messages, as expected", sent);
+		
+		//end date
+		Date endDate = new Date();
+		
+		//delta
+		long deltaTime = endDate.getTime() - startDate.getTime();
+		
+		//log for perf
+		this.logger.info("Recieved {} messages and delivered {} in {}ms", new Object[]{AbstractExchangeTest.MESSAGE_COUNT, sent, deltaTime});
 	}
 	
 	private void subscribe(Subscription subscription) {

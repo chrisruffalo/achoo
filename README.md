@@ -11,10 +11,10 @@ without requiring expensive clients, multiple threads, or esoteric protocols.  W
 * Akka 2 - distributed message passing, actor based multi-threaded communication
 * Logback and SLF4J - logging, plain and simple
 * Jetty 8 - fast and full-featured web container
-* Tiny Java Web Server - slim web server for other endpoint types
+* JBoss Weld - CDI and other magic
 * RESTEasy - simple rest services
 * JCommander - command line parsing
-* Typesafe Config - robust configuration library
+* Typesafe Config - easy to use configuration library
 * Guava - the thousand little things we don't want to write ourselves
 
 ## Road Map
@@ -34,6 +34,7 @@ without requiring expensive clients, multiple threads, or esoteric protocols.  W
   * Configurable, Durable in-flight characteristics (messages no longer lost on shutdown)
   * Configurable Queue Types (adding SmallestMailbox and Scatter-Gather)
   * Durable (JBDC/Hibernate) On Demand storage
+  * Durable Subscribers
 
 * 1.2 - Turing
   * More flexible topic-queue system
@@ -50,15 +51,5 @@ without requiring expensive clients, multiple threads, or esoteric protocols.  W
 
 * 1.4 - Sterling
   * Users shall be able to configure which endpoints (management, subscribe, send) go on a particular interface
-  * SSL support for Jetty and TJWS
+  * SSL support for Jetty
   * HTTPS callback support
-
-## API
-
-### Basics
-
-Achoo's REST endpoints are deployed to the "/" context root.  This means that http://localhost:8082/ will bring you to the root of the application.
-
-### Subscribing
-
-Achoo allows you to subscribe (as of 0.1-SNAPSHOT) in two different ways: demand and http.  

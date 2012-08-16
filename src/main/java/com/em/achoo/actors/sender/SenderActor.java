@@ -22,7 +22,7 @@ public class SenderActor extends UntypedActor {
 
 			ISender sender = recipient.createSender();
 			
-			this.logger.trace("Sending {} to {} on exchange {} with impl {}", new Object[]{message.getId(), sender.getName(), this.self().path().toString(), sender.getClass().getName()});
+			this.logger.trace("Sending {} to {} on exchange {} with impl {} from path {}", new Object[]{message.getId(), sender.getName(), this.self().path().toString(), sender.getClass().getName(), this.self().path().toString()});
 			
 			sender.send(message);
 		}		

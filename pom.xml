@@ -136,30 +136,6 @@
 			<artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.hibernate</groupId>
-		    <artifactId>hibernate-c3p0</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.slf4j</groupId>
-		    <artifactId>log4j-over-slf4j</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.hsqldb</groupId>
-		    <artifactId>hsqldb</artifactId>
-		</dependency>		
-		<dependency>
-			<groupId>com.googlecode</groupId>
-			<artifactId>kryo</artifactId>
-		</dependency>
-		<dependency>
 		    <groupId>org.jboss.weld.se</groupId>
 		    <artifactId>weld-se-core</artifactId>
 		</dependency>	
@@ -457,9 +433,9 @@
 			</dependency>			
 			<!-- efficient serialization -->
 			<dependency>
-				<groupId>com.googlecode</groupId>
+				<groupId>com.esotericsoftware.kryo</groupId>
 				<artifactId>kryo</artifactId>
-				<version>1.04</version>
+				<version>2.19</version>
 			</dependency>
 			<!-- weld injection -->
 			<dependency>

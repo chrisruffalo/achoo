@@ -7,7 +7,7 @@ public class HttpSubscription extends Subscription {
 
 	private String host = null;
 	
-	private int port = -1;
+	private int port = 80;
 	
 	private String path = null;
 	

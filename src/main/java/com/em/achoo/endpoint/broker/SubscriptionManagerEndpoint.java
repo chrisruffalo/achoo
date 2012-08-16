@@ -101,7 +101,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 	@NoCache
 	@Consumes(value={MediaType.WILDCARD})
 	@Produces(value={MediaType.TEXT_PLAIN})
-	public String subscribeHttp(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString, @QueryParam(value="host") String host, @QueryParam(value="port") @DefaultValue(value="-1") int port, @QueryParam(value="path") @DefaultValue(value="/") String path, @QueryParam(value="method") @DefaultValue(value="PUT") String methodString) {
+	public String subscribeHttp(@PathParam(value="exchangeName") String exchangeName, @PathParam(value="type") String typeString, @QueryParam(value="host") String host, @QueryParam(value="port") @DefaultValue(value="80") int port, @QueryParam(value="path") @DefaultValue(value="/") String path, @QueryParam(value="method") @DefaultValue(value="PUT") String methodString) {
 
 		ExchangeInformation exchange = new ExchangeInformation();
 		exchange.setName(exchangeName);
@@ -118,10 +118,20 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		subscription.setExchangeInformation(exchange);
 		subscription.setHost(host);
 		subscription.setPort(port);
+		
+		if(path == null || path.isEmpty()) {
+			path = "/";
+		} else if(!path.startsWith("/")) {
+			path = "/" + path;
+		}
+		
 		subscription.setPath(path);
 
 		HttpSendMethod method = null;
 		try {
+			if(methodString != null) {
+				methodString = methodString.toUpperCase();
+			}
 			method = HttpSendMethod.valueOf(methodString);
 		} catch (EnumConstantNotPresentException ex) {
 			method = HttpSendMethod.PUT;
@@ -131,8 +141,7 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		Subscription response = this.doSubscribe(subscription);
 		
 		return response.getId();
-	}
-	
+	}	
 
 	/**
 	 * Unsubscribe from a given exchange.  TOPIC/QUEUE type does not matter here.
@@ -221,16 +230,5 @@ public class SubscriptionManagerEndpoint extends AbstractEndpoint {
 		}
 		
 		return subscriptionResponse;
-	}
-	
-	private ExchangeType stringToExchangeType(String typeString) {
-		typeString = typeString == null ? "TOPIC" : typeString.toUpperCase();
-		ExchangeType type = null;
-		try {
-			type = ExchangeType.valueOf(typeString);
-		} catch (EnumConstantNotPresentException ex) {
-			type = ExchangeType.TOPIC;
-		}
-		return type;
 	}
 }

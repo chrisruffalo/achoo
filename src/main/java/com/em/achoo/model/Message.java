@@ -15,13 +15,14 @@ import com.em.achoo.model.exchange.ExchangeInformation;
  */
 public class Message {
 	
-	public static final String MESSAGE_BODY = "com.em.achoo.model.Message.body"; 
 
 	private Map<String, Object> headers = null;
 	
 	private Map<String, Object> parameters = null;
 	
 	private ExchangeInformation toExchange = null;
+	
+	private Object body = null;
 	
 	private String id = null;
 	
@@ -31,11 +32,11 @@ public class Message {
 	}
 	
 	public Object getBody() {
-		return this.parameters.get(Message.MESSAGE_BODY);
+		return this.body;
 	}
 
 	public void setBody(Object body) {
-		this.parameters.put(Message.MESSAGE_BODY, body);
+		this.body = body;
 	}
 
 	public Map<String, Object> getHeaders() {

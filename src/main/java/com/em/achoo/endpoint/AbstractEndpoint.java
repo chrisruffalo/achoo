@@ -8,6 +8,7 @@ import akka.actor.ActorSystem;
 
 import com.em.achoo.Achoo;
 import com.em.achoo.configure.ConfigurationKeys;
+import com.em.achoo.model.exchange.ExchangeType;
 
 public class AbstractEndpoint {
 
@@ -33,5 +34,15 @@ public class AbstractEndpoint {
 	protected ActorRef getExchangeManager() {
 		return this.getAchooReference().getExchangeManagerRef();
 	}
-	
+			
+	protected ExchangeType stringToExchangeType(String typeString) {
+		typeString = typeString == null ? "TOPIC" : typeString.toUpperCase();
+		ExchangeType type = null;
+		try {
+			type = ExchangeType.valueOf(typeString);
+		} catch (EnumConstantNotPresentException ex) {
+			type = ExchangeType.TOPIC;
+		}
+		return type;
+	}	
 }

@@ -25,6 +25,7 @@ import akka.actor.ActorRef;
 import com.em.achoo.endpoint.AbstractEndpoint;
 import com.em.achoo.model.Message;
 import com.em.achoo.model.exchange.ExchangeInformation;
+import com.em.achoo.model.exchange.ExchangeType;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -39,11 +40,11 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 	private Logger logger = LoggerFactory.getLogger(MessageRecieveEndpoint.class);
 	
 	/**
-	 * Send a message to the given exchange.  
+	 * Send a message to the named topic.
 	 * 
 	 * @throws WebApplicationException(404) if the exchange does not exist
 	 * 
-	 * @param name name of the exchange
+	 * @param name name of the topic
 	 * @param request
 	 * @return
 	 */
@@ -57,6 +58,86 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		//create message
 		ExchangeInformation exchange = new ExchangeInformation();
 		exchange.setName(name);
+		exchange.setType(ExchangeType.TOPIC);
+	
+		//send
+		String response = this.send(exchange, request);
+		
+		//return response
+		return response;
+	}
+	
+	/**
+	 * Send a message to the exchange of the given name and type.  
+	 * 
+	 * @throws WebApplicationException(404) if the exchange does not exist
+	 * 
+	 * @param name name of the exchange
+	 * @param type type of exchange to send to (see: {@link ExchangeType})
+	 * @param request
+	 * @return
+	 */
+	@PUT
+	@POST
+	@Path("/send/{exchangeName}/{type}")
+	@NoCache
+	@Consumes(value={MediaType.WILDCARD})
+	@Produces(value={MediaType.TEXT_PLAIN})
+	public String send(@PathParam(value="exchangeName") String name, String typeString, @Context HttpServletRequest request) {
+		//create message
+		ExchangeInformation exchange = new ExchangeInformation();
+		exchange.setName(name);
+		exchange.setType(this.stringToExchangeType(typeString));		
+		
+		//send
+		String response = this.send(exchange, request);
+		
+		//return response
+		return response;
+	}
+	
+	/**
+	 * Send a message to any exchange type with the given name.
+	 * 
+	 * @throws WebApplicationException(404) if the exchange does not exist
+	 * 
+	 * @param name name of the exchange
+	 * @param request
+	 * @return
+	 */
+	@PUT
+	@POST
+	@Path("/send/{exchangeName}/any")
+	@NoCache
+	@Consumes(value={MediaType.WILDCARD})
+	@Produces(value={MediaType.TEXT_PLAIN})
+	public String sendAny(@PathParam(value="exchangeName") String name, @Context HttpServletRequest request) {
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		
+		for(ExchangeType type : ExchangeType.values()) {
+			//create message
+			ExchangeInformation exchange = new ExchangeInformation();
+			exchange.setName(name);
+			exchange.setType(type);
+			builder.append("{");
+			builder.append(this.send(exchange, request));
+			builder.append("}");
+		}
+		
+		//close
+		builder.append("]");
+		
+		//send
+		String response = builder.toString();
+		
+		//return response
+		return response;
+	}
+	
+	private String send(ExchangeInformation exchange, HttpServletRequest request) {
+		//create message for exchange
 		Message message = Message.create(exchange);
 		
 		//each of the parameters should be put on the message
@@ -64,7 +145,11 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		while(parameterNames.hasMoreElements()) {
 			String parameterName = parameterNames.nextElement();
 			String value = request.getParameter(parameterName);
-			message.getParameters().put(parameterName, value);
+			
+			if(value != null) {
+				this.logger.info("Parameter: {} = {}", parameterName, value);
+				message.getParameters().put(parameterName, value);
+			}
 		}
 		
 		//get message content and put in byte array to store in object
@@ -77,7 +162,12 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 		} catch (IOException e) {
 			this.logger.warn("message {} does not contain a body.", message.getId());
 		}
-		message.setBody(content);
+
+		//set the message body to the binary content of the stream
+		if(content.length > 0) {
+			this.logger.info("Added message body of size {}", content.length);
+			message.setBody(content);
+		}
 
 		this.dispatch(message);
 		String response = "dispatched message";
@@ -87,7 +177,7 @@ public class MessageRecieveEndpoint extends AbstractEndpoint {
 	}
 	
 	/**
-	 * Method used by different send endpoints to route the message
+	 * Method used by different send end points to route the message
 	 * 
 	 * @param exchangeName
 	 * @param achooMessage

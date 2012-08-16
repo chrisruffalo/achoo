@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.em</groupId>
 	<artifactId>achoo</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>achoo</name>
 
 	<developers>
@@ -41,6 +41,7 @@
 		</repository>
 	</repositories>
 
+	<!-- open source but not restrictive or viral -->
 	<licenses>
 		<license>
 			<name>Apache License v2.0</name>
@@ -49,9 +50,11 @@
 		</license>
 	</licenses>
 
-
 	<properties>
+		<!-- output -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		
+		<!-- versioning -->
 		<akka.version>2.1-SNAPSHOT</akka.version>
 		<slf4j.version>1.6.6</slf4j.version>
 		<resteasy.version>2.3.4.Final</resteasy.version>

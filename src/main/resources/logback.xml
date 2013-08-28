@@ -1,25 +1,18 @@
-<configuration scan="true" scanPeriod="1 minute">
+<configuration>
 
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n
-			</pattern>
-		</encoder>
-	</appender>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  
+  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="STDOUT" />
+  </appender>
 
-	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-		<appender-ref ref="STDOUT" />
-	</appender>
-	
-	<!-- example for how to silence/overwrite other logging patterns -->
-	<!-- 
-	<logger name="org.hibernate" level="info" additivity="false">
-		<appender-ref ref="ASYNC" />
-	</logger>
-	-->
-
-	<root level="info">
-		<appender-ref ref="ASYNC" />
-	</root>
+  <root level="info">
+    <appender-ref ref="ASYNC" />
+  </root>
 </configuration>

@@ -17,6 +17,7 @@
 		<logback.version>1.0.13</logback.version>
 		<disruptor.version>3.2.0</disruptor.version>
 		<guava.version>15.0-rc1</guava.version>
+		<junit.version>4.11</junit.version>
 	</properties>
 
 	<dependencies>
@@ -45,6 +46,13 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
+		</dependency>
+		
+		<!-- testing/junit -->
+		<dependency>
+		  <groupId>junit</groupId>
+		  <artifactId>junit</artifactId>
+		  <version>${junit.version}</version>
 		</dependency>
 	</dependencies>
 

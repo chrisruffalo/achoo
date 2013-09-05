@@ -1,4 +1,4 @@
-package com.achoo.subscriptions;
+package com.achoo.topicstore;
 
 import org.junit.Assert;
 import org.junit.Test;

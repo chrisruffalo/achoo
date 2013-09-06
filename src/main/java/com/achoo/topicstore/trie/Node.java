@@ -22,4 +22,6 @@ public interface Node {
 	Set<String> paths();
 	
 	RootNode root();
+	
+	Node parent();
 }

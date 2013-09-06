@@ -2,7 +2,11 @@ package com.achoo.topicstore.trie;
 
 public class AnyCharacterNode extends AbstractNode {
 
-	private static final char ANYCHARACTER = '#';
+	AnyCharacterNode(Node parent) {
+		super(parent);
+	}
+
+	static final char ANYCHARACTER = '#';
 	
 	@Override
 	public char value() {

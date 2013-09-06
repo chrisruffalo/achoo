@@ -1,8 +1,10 @@
 package com.achoo.topicstore.trie;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +21,10 @@ public abstract class AbstractNode implements Node {
 	
 	private RootNode root;
 	
-	AbstractNode() {
+	private Node parent;
+	
+	AbstractNode(Node parent) {
+		this.parent = parent;
 		this.logger = LoggerFactory.getLogger(this.getClass());
 		this.children = new LinkedHashMap<>(2);
 	}
@@ -39,10 +44,10 @@ public abstract class AbstractNode implements Node {
 			throw new InvalidMergeException("A root node cannot be merged into a non-root node");
 		}
 		
-		this.logger.trace("Merging {} into {}", this.toString(), node.toString());
+		this.logger.trace("Merging {} into {}", this, node);
 		
-		if(this.children.containsKey(node.value())) {
-			Node localChild = this.children.get(node.value());
+		Node localChild = this.children.get(node.value());
+		if(localChild != null) {
 			for(Node remoteChild : node.children().values()) {
 				localChild.merge(remoteChild);
 			}
@@ -51,6 +56,13 @@ public abstract class AbstractNode implements Node {
 			this.children.put(node.value(), node);
 			this.logger.trace("Putting '{}' into node for '{}'", node.value(), this.value());
 		}
+		
+		// update root and parent
+		if(node instanceof AbstractNode) {
+			AbstractNode abstractNode = (AbstractNode)node;
+			abstractNode.root(this.root());
+			abstractNode.parent(this);
+		}		
 	}
 
 	@Override
@@ -60,12 +72,16 @@ public abstract class AbstractNode implements Node {
 
 	@Override
 	public Set<Node> find(String input, boolean exact) {
+		this.logger.trace("Searching for : '{}' on node '{}'", input, this);
+		
 		if(Strings.isNullOrEmpty(input)) {
-			return Collections.emptySet();
+			Node termination = this.children.get(TerminationNode.TERMINATED);
+			if(termination != null) {
+				return termination.find(input);
+			}
+			return new LinkedHashSet<>();
 		}
 		
-		Set<Node> nodes = new LinkedHashSet<>();
-
 		char head = input.charAt(0);
 		if(input.length() == 1) {
 			input = "";
@@ -74,12 +90,43 @@ public abstract class AbstractNode implements Node {
 		}
 		 
 		if(this.matches(head, exact)) {
-			for(Node child : this.children().values()) {
-				nodes.addAll(child.find(input, exact));
-			}
-		}	
+			return this.childFind(input, exact);
+		} else {
+			return new LinkedHashSet<>();
+		}
+	}
+	
+	protected Set<Node> childFind(String input, boolean exact) {
+		Set<Node> nodes = null;
 		
-		return Collections.unmodifiableSet(nodes);
+		if(!input.isEmpty()) {
+			char head = input.charAt(0);
+			
+			Node childFind = this.children.get(head);
+			if(childFind != null) {
+				nodes = childFind.find(input);
+			}
+		}
+		
+		if(nodes == null) {
+			nodes = new LinkedHashSet<>();
+		}
+					
+		List<Character> additional = new ArrayList<>(((exact) ? 1 : 3));
+		additional.add(TerminationNode.TERMINATED);
+		if(!exact) {
+			additional.add(WildcardNode.WILDCARD);
+			additional.add(AnyCharacterNode.ANYCHARACTER);
+		}
+		
+		for(Character test : additional) {
+			Node testNode = this.children.get(test);
+			if(testNode != null) {
+				nodes.addAll(testNode.find(input));
+			}
+		}
+		
+		return nodes;
 	}
 	
 	@Override
@@ -89,7 +136,7 @@ public abstract class AbstractNode implements Node {
 	
 	@Override
 	public Set<String> paths() {
-		this.logger.trace("getting paths from {}", this.toString());
+		this.logger.trace("getting paths from {}", this);
 		
 		Set<String> paths = new LinkedHashSet<>();
 		for(Node child : this.children().values()) {
@@ -116,11 +163,18 @@ public abstract class AbstractNode implements Node {
 	public RootNode root() {
 		return this.root;
 	}
+	
+	void parent(Node parent) {
+		this.parent = parent;
+	}
+	
+	public Node parent() {
+		return this.parent;
+	}
 
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName() + " [value='" + this.value() + "', children='" + this.children.size() + "']";
 	}
-	
 	
 }

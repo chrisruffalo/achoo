@@ -5,8 +5,8 @@ public class LiteralCharacterNode extends AbstractNode {
 
 	private char value;	
 	
-	LiteralCharacterNode(char literal) {
-		super();
+	LiteralCharacterNode(Node parent, char literal) {
+		super(parent);
 		
 		this.value = literal;
 	}

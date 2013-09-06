@@ -40,4 +40,38 @@ public class NodeFindTest {
 		Assert.assertEquals(2, found.size());
 	}
 	
+	@Test
+	public void testBasicWildcard() {
+		Node node = NodeFactory.generate("abcd");
+		node.merge(NodeFactory.generate("a*d"));
+		node.merge(NodeFactory.generate("a*cd"));
+		node.merge(NodeFactory.generate("ab*d"));
+		node.merge(NodeFactory.generate("abc*"));
+		node.merge(NodeFactory.generate("a*c*"));
+		node.merge(NodeFactory.generate("*b*d"));
+		node.merge(NodeFactory.generate("*bcd"));
+		
+		// ensure that wildcards can mix
+		node.merge(NodeFactory.generate("#*cd"));
+		node.merge(NodeFactory.generate("##*d"));
+		node.merge(NodeFactory.generate("#*#d"));
+		
+		// ensure backward compatibility
+		node.merge(NodeFactory.generate("###d"));
+		
+		// full wildcard
+		node.merge(NodeFactory.generate("*"));
+		
+		// do not match
+		node.merge(NodeFactory.generate("eeee"));
+		node.merge(NodeFactory.generate("e*"));
+		node.merge(NodeFactory.generate("*e"));
+
+		// make sure root is calculated properly
+		Assert.assertEquals(4, node.children().size());
+		
+		Set<Node> found = node.find("abcd");
+		Assert.assertEquals(13, found.size());		
+	}
+	
 }

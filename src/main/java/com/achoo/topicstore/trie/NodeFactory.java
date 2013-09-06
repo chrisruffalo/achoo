@@ -21,31 +21,27 @@ public final class NodeFactory {
 			return root;
 		}
 		
-		Node previous = null;
+		Node previous = root;
 		
 		for(char current : input.toCharArray()) {
 			Node local = null;
 			if('#' == current) {
-				AnyCharacterNode any = new AnyCharacterNode();
+				AnyCharacterNode any = new AnyCharacterNode(previous);
 				any.root(root);
 				local = any;
 			} else if('*' == current) {
-				WildcardNode wild = new WildcardNode();
+				WildcardNode wild = new WildcardNode(previous);
 				wild.root(root);
 				local = wild;
 			} else {
-				LiteralCharacterNode literal = new LiteralCharacterNode(current);
+				LiteralCharacterNode literal = new LiteralCharacterNode(previous, current);
 				literal.root(root);
 				local = literal;
 			}
 			
 			NodeFactory.LOGGER.trace("local: " + local.toString());
 
-			if(previous != null) {
-				previous.merge(local);
-			} else {
-				root.merge(local);
-			}
+			previous.merge(local);
 			previous = local;
 		}
 		// previous is, at this point, the highest/deepest point

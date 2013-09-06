@@ -1,6 +1,7 @@
 package com.achoo.topicstore.trie;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,14 +9,10 @@ import com.google.common.base.Strings;
 
 public class TerminationNode extends AbstractNode {
 
-	private static final char TERMINATED = '\0';
+	static final char TERMINATED = '\0';
 	
-	private final Node terminated; 
-	
-	TerminationNode(Node terminated) {
-		super();
-		
-		this.terminated = terminated;
+	TerminationNode(Node parent) {
+		super(parent);		
 	}
 	
 	@Override
@@ -45,18 +42,18 @@ public class TerminationNode extends AbstractNode {
 
 	@Override
 	public Set<Node> find(String input, boolean exact) {
+		// only returns the termination node if the
+		// string was empty (so termination has to 
+		// land on a termination node)
+		LinkedHashSet<Node> results = new LinkedHashSet<>();
 		if(Strings.isNullOrEmpty(input)) {
-			return Collections.singleton(this.terminated);
-		} else {
-			return Collections.emptySet();
-		}
+			results.add(this.parent());
+		} 
+		return results;
 	}
 
 	@Override
 	public Set<String> paths() {
 		return Collections.emptySet();
 	}
-	
-	
-
 }

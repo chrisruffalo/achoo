@@ -8,7 +8,7 @@ public class WildcardNodeTest {
 
 	@Test
 	public void testMatch() {
-		WildcardNode node = new WildcardNode();
+		WildcardNode node = new WildcardNode(null);
 		Assert.assertTrue(node.matches('*'));
 		Assert.assertTrue(node.matches('a'));
 		Assert.assertTrue(node.matches('g'));
@@ -20,7 +20,7 @@ public class WildcardNodeTest {
 
 	@Test
 	public void testExactMatch() {
-		WildcardNode node = new WildcardNode();
+		WildcardNode node = new WildcardNode(null);
 		Assert.assertTrue(node.matches('*', true));
 		Assert.assertFalse(node.matches('a', true));
 		Assert.assertFalse(node.matches('g', true));

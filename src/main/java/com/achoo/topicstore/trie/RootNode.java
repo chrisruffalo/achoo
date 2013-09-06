@@ -6,16 +6,19 @@ import java.util.Set;
 
 public class RootNode extends AbstractNode {
 
-	private static final char EMPTY = '\0';
+	static final char ROOT = '\0';
+	
+	RootNode() {
+		super(null);
+	}
 	
 	@Override
 	public char value() {
-		return RootNode.EMPTY;
+		return RootNode.ROOT;
 	}
 	
 	@Override
 	public void merge(Node node) {
-		
 		// handle even-steven merge of root nodes
 		if(node instanceof RootNode) {
 			for(Node rootChild : node.children().values()) {
@@ -34,17 +37,20 @@ public class RootNode extends AbstractNode {
 			}
 		} else {
 			this.putChild(node.value(), node);
+			
+			// update root and parent
+			if(node instanceof AbstractNode) {
+				AbstractNode abstractNode = (AbstractNode)node;
+				abstractNode.root(this.root());
+				abstractNode.parent(this);
+			}
 		}
 	}
-	
-	
 
 	@Override
 	public Set<Node> find(String input, boolean exact) {
 		Set<Node> results = new LinkedHashSet<>();
-		for(Node node : this.children().values()) {
-			results.addAll(node.find(input, exact));
-		}
+		results.addAll(this.childFind(input, exact));
 		return Collections.unmodifiableSet(results);
 	}
 
@@ -63,5 +69,19 @@ public class RootNode extends AbstractNode {
 		return paths;
 	}
 
-	
+	@Override
+	public RootNode root() {
+		return this;
+	}
+
+	@Override
+	public Node parent() {
+		// TODO Auto-generated method stub
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + " [children='" + this.children().size() + "']";
+	}
 }

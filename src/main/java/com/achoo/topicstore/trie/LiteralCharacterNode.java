@@ -3,22 +3,22 @@ package com.achoo.topicstore.trie;
 
 public class LiteralCharacterNode extends AbstractNode {
 
-	private char value;	
+	private final Character value;	
 	
 	LiteralCharacterNode(Node parent, char literal) {
 		super(parent);
 		
-		this.value = literal;
+		this.value = Character.valueOf(literal);
 	}
 	
 	@Override
 	public char value() {
-		return this.value;
+		return this.value.charValue();
 	}
 
 	@Override
 	public boolean matches(char input, boolean exact) {
-		return Character.compare(input, this.value()) == 0;
+		return this.value.equals(input);
 	}
 
 }

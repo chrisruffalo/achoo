@@ -1,6 +1,5 @@
 package com.achoo.topicstore.trie;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -48,10 +47,8 @@ public class RootNode extends AbstractNode {
 	}
 
 	@Override
-	public Set<Node> find(String input, boolean exact) {
-		Set<Node> results = new LinkedHashSet<>();
-		results.addAll(this.childFind(input, exact));
-		return Collections.unmodifiableSet(results);
+	public void find(Set<Node> destination, String input, int index, boolean exact) {
+		this.childFind(destination, input, index, exact);
 	}
 
 	@Override
@@ -76,12 +73,17 @@ public class RootNode extends AbstractNode {
 
 	@Override
 	public Node parent() {
-		// TODO Auto-generated method stub
 		return this;
+	}
+	
+	@Override
+	public String name() {
+		return "";
 	}
 
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName() + " [children='" + this.children().size() + "']";
 	}
+
 }

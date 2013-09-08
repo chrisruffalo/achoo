@@ -47,7 +47,7 @@
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
 		</dependency>
-		
+	
 		<!-- testing/junit -->
 		<dependency>
 		  <groupId>junit</groupId>

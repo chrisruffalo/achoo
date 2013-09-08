@@ -1,6 +1,5 @@
 package com.achoo.topicstore.trie;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.common.base.Strings;
@@ -28,34 +27,23 @@ public class WildcardNode extends AbstractNode {
 	}
 
 	@Override
-	public Set<Node> find(String input, boolean exact) {
-		if(Strings.isNullOrEmpty(input)) {
-			Node termination = this.children().get(TerminationNode.TERMINATED);
-			if(termination != null) {
-				return termination.find(input);
-			}
-			return new LinkedHashSet<>();
-		}
+	public void find(Set<Node> destination, String input, int index, boolean exact) {
+		boolean nullOrEmpty = Strings.isNullOrEmpty(input);
 		
-		if(this.children().size() == 1) {
+		if(nullOrEmpty || this.children().size() == 1) {
 			Node termination = this.children().get(TerminationNode.TERMINATED);
 			if(termination != null) {
-				return termination.find("");
+				termination.find(destination, input, index, exact);
+			}
+			
+			if(nullOrEmpty) {
+				return;
 			}
 		}
 		
-		Set<Node> results = null;
 		do {
-			if(results == null) {
-				results = super.find(input, exact);
-			} else {
-				results.addAll(super.find(input, exact));
-			}
-			input = input.substring(1);
-		} while(!Strings.isNullOrEmpty(input));
-		
-		return results;
+			super.find(destination, input, index, exact);
+			index++;
+		} while(index < input.length());
 	}
-	
-	
 }

@@ -11,6 +11,8 @@ public interface Node {
 	
 	Set<Node> find(String input, boolean exact);
 	
+	void find(Set<Node> destination, String input, int index, boolean exact);
+	
 	Map<Character, Node> children();
 	
 	void merge(Node node);
@@ -20,6 +22,8 @@ public interface Node {
 	boolean matches(char input, boolean exact);
 	
 	Set<String> paths();
+	
+	String name();
 	
 	RootNode root();
 	

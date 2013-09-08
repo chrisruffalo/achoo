@@ -1,11 +1,8 @@
 package com.achoo.topicstore.trie;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.base.Strings;
 
 public class TerminationNode extends AbstractNode {
 
@@ -41,19 +38,23 @@ public class TerminationNode extends AbstractNode {
 	}
 
 	@Override
-	public Set<Node> find(String input, boolean exact) {
+	public void find(Set<Node> destination, String input, int index, boolean exact) {
 		// only returns the termination node if the
 		// string was empty (so termination has to 
 		// land on a termination node)
-		LinkedHashSet<Node> results = new LinkedHashSet<>();
-		if(Strings.isNullOrEmpty(input)) {
-			results.add(this.parent());
+		if(index >= input.length()) {
+			destination.add(this.parent());
 		} 
-		return results;
+	}
+	
+	@Override
+	public String name() {
+		return "";
 	}
 
 	@Override
 	public Set<String> paths() {
 		return Collections.emptySet();
 	}
+
 }

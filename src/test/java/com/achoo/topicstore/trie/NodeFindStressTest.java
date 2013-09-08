@@ -1,5 +1,6 @@
 package com.achoo.topicstore.trie;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -11,15 +12,13 @@ import com.google.common.base.Strings;
 
 public class NodeFindStressTest {
 
-	private static final long SIZE = 750000;
+	private static final long SIZE = 50000;
 	
 	private static final int LENGTH = 20;
 	
 	@Test
 	public void stressWithWildcards() {
 		Logger logger = LoggerFactory.getLogger(this.getClass()); 
-		
-		int found = 0;
 		
 		Node node = new RootNode();
 		long start = System.currentTimeMillis();
@@ -35,14 +34,14 @@ public class NodeFindStressTest {
 		logger.info("generation took: " + (System.currentTimeMillis() - start) + "ms");
 		start = System.currentTimeMillis();
 		
+		Set<Node> findSet = new LinkedHashSet<>();
 		long nextPercent = NodeFindStressTest.SIZE / 10;
 		for(long i = 0; i < NodeFindStressTest.SIZE; i++) {
 			String generated = this.generate(false);
 			Assert.assertEquals(NodeFindStressTest.LENGTH, generated.length());
 			//System.out.println("searching: " + generated);
-			Set<Node> results = node.find(generated);
-			found += results.size();
-			
+			node.find(findSet, generated, 0, false);
+						
 			if(i > nextPercent) {
 				logger.info("searched {} (of {}) items in : {}ms", new Object[]{i, NodeFindStressTest.SIZE, (System.currentTimeMillis() - start)});
 				nextPercent = nextPercent + (NodeFindStressTest.SIZE / 10);	
@@ -50,7 +49,7 @@ public class NodeFindStressTest {
 		}
 		
 		logger.info("searching took: " + (System.currentTimeMillis() - start) + "ms");
-		logger.info("found: " + found + " nodes");
+		logger.info("found: " + findSet.size() + " nodes");
 	}
 	
 	private String generate(boolean wildcards) {

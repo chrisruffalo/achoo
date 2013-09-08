@@ -1,13 +1,10 @@
 package com.achoo.topicstore.trie;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 
 public final class NodeFactory {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(NodeFactory.class);
+	//private static final Logger LOGGER = LoggerFactory.getLogger(NodeFactory.class);
 	
 	private NodeFactory() {
 		
@@ -39,7 +36,7 @@ public final class NodeFactory {
 				local = literal;
 			}
 			
-			NodeFactory.LOGGER.trace("local: " + local.toString());
+			//NodeFactory.LOGGER.trace("local: " + local.toString());
 
 			previous.merge(local);
 			previous = local;

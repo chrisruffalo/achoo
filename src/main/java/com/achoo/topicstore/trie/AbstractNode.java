@@ -16,9 +16,12 @@ public abstract class AbstractNode implements Node {
 
 	private Node parent;
 	
+	private String cachedName;
+	
 	AbstractNode(Node parent) {
 		this.parent = parent;
 		this.children = new LinkedHashMap<>();
+		this.cachedName = null;
 	}
 	
 	@Override
@@ -136,17 +139,25 @@ public abstract class AbstractNode implements Node {
 	
 	public void parent(Node parent) {
 		this.parent = parent;
+		this.cachedName = null;
 	}
 	
 	public Node parent() {
 		return this.parent;
 	}
 	
-	public String name() {
+	private String calculateName() {
 		if(this.parent != null) {
 			return this.parent.name() + this.value();
 		}
 		return ""+this.value();
+	}
+	
+	public String name() {
+		if(this.cachedName == null) {
+			this.cachedName = this.calculateName();
+		}		
+		return this.cachedName;
 	}
 	
 	public Node root() {

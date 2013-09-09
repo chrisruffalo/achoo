@@ -16,8 +16,7 @@ public final class NodeFactory {
 		// return empty root if no good input provided
 		if(Strings.isNullOrEmpty(input)) {
 			return root;
-		}
-		
+		}		
 		
 		Node previous = root;
 		

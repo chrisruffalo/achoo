@@ -22,7 +22,8 @@ public class NodeMergeTest {
 	@Test
 	public void testSimplePath() {
 		Node node = NodeFactory.generate("abcd");
-		Assert.assertEquals(4, node.paths().size());		
+		node.merge(NodeFactory.generate("abce"));
+		Assert.assertEquals(2, node.paths().size());		
 	}
 	
 	@Test
@@ -30,7 +31,7 @@ public class NodeMergeTest {
 		Node node1 = NodeFactory.generate("abcd");
 		Node node2 = NodeFactory.generate("abef");
 		Node node3 = NodeFactory.generate("abcg");
-		Node node4 = NodeFactory.generate("abcd");
+		Node node4 = NodeFactory.generate("abcd"); // duplicate, no change
 		Node node5 = NodeFactory.generate("aqlm#421*");
 		Node node6 = NodeFactory.generate("1234");
 		Node node7 = NodeFactory.generate("aaaaaaaaaaaaaaaaaaaaaaaa");
@@ -45,14 +46,6 @@ public class NodeMergeTest {
 		node1.merge(node8);
 		
 		Set<String> paths = node1.paths();
-		Assert.assertEquals(66, paths.size());		
-	}
-
-	@Test(expected=InvalidMergeException.class)
-	public void testBadMerge() {
-		Node node1 = NodeFactory.generate("abcd");
-		Node node2 = NodeFactory.generate("abef");
-		Node nonRoot = node2.children().values().iterator().next();
-		nonRoot.merge(node1);
+		Assert.assertEquals(7, paths.size());		
 	}
 }

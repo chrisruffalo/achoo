@@ -2,7 +2,6 @@ package com.achoo.topicstore.trie;
 
 import java.util.Set;
 
-import com.google.common.base.Strings;
 
 
 public class WildcardNode extends AbstractNode {
@@ -25,25 +24,34 @@ public class WildcardNode extends AbstractNode {
 		}
 		return true;
 	}
-
+	
 	@Override
 	public void find(Set<Node> destination, String input, int index, boolean exact) {
-		boolean nullOrEmpty = Strings.isNullOrEmpty(input);
-		
-		if(nullOrEmpty || this.children().size() == 1) {
-			Node termination = this.children().get(TerminationNode.TERMINATED);
-			if(termination != null) {
-				termination.find(destination, input, index, exact);
+		if(!exact) {
+			if(this.children().containsKey(TerminationNode.TERMINATED)) {
+				destination.add(this);
+				// fast forward to end of string
+				// in the future this might mean
+				// fast forwarding to a "." or "/" 
+				// character for heirarchical search
+				//index = input.length();
+				if(this.children().size() == 1) {
+					index = input.length();
+				}
 			}
 			
-			if(nullOrEmpty) {
+			if(index >= input.length()) {
 				return;
 			}
 		}
 		
-		do {
-			super.find(destination, input, index, exact);
-			index++;
-		} while(index < input.length());
+		// search as per normal
+		super.find(destination, input, index, exact);
+		
+		// only continue wildcard style search if the
+		// search is not an exact match
+		if(!exact && index < input.length()) {
+			super.find(destination, input, index+1, exact);
+		}
 	}
 }

@@ -15,36 +15,6 @@ public class RootNode extends AbstractNode {
 	public char value() {
 		return RootNode.ROOT;
 	}
-	
-	@Override
-	public void merge(Node node) {
-		// handle even-steven merge of root nodes
-		if(node instanceof RootNode) {
-			for(Node rootChild : node.children().values()) {
-				this.merge(rootChild);
-			}
-			return;
-		}
-		
-		// otherwise manually merge into this (root) node
-		if(this.children().containsKey(node.value())) {
-			Node localChild = this.children().get(node.value());
-			if(localChild != null) {
-				for(Node remoteChild : node.children().values()) {
-					localChild.merge(remoteChild);
-				}
-			}
-		} else {
-			this.putChild(node.value(), node);
-			
-			// update root and parent
-			if(node instanceof AbstractNode) {
-				AbstractNode abstractNode = (AbstractNode)node;
-				abstractNode.root(this.root());
-				abstractNode.parent(this);
-			}
-		}
-	}
 
 	@Override
 	public void find(Set<Node> destination, String input, int index, boolean exact) {
@@ -67,12 +37,11 @@ public class RootNode extends AbstractNode {
 	}
 
 	@Override
-	public RootNode root() {
+	public Node parent() {
 		return this;
 	}
-
-	@Override
-	public Node parent() {
+	
+	public Node root() {
 		return this;
 	}
 	

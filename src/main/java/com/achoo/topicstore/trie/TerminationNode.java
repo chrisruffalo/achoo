@@ -49,12 +49,17 @@ public class TerminationNode extends AbstractNode {
 	
 	@Override
 	public String name() {
-		return "";
+		return this.parent().name();
 	}
 
 	@Override
 	public Set<String> paths() {
-		return Collections.emptySet();
+		return Collections.singleton(this.name());
+	}
+	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + " [name='" + this.name() + "', value='TERMINATION']";
 	}
 
 }

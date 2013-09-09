@@ -1,5 +1,6 @@
 package com.achoo.topicstore.trie;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,6 +18,10 @@ public interface Node {
 	
 	void merge(Node node);
 	
+	void merge(Node... nodes);
+	
+	void merge(Collection<Node> nodes);
+	
 	boolean matches(char input);
 	
 	boolean matches(char input, boolean exact);
@@ -25,7 +30,9 @@ public interface Node {
 	
 	String name();
 	
-	RootNode root();
-	
 	Node parent();
+	
+	void parent(Node parent);
+	
+	Node root();
 }

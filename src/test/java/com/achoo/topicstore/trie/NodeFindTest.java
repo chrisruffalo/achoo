@@ -55,6 +55,7 @@ public class NodeFindTest {
 		node.merge(NodeFactory.generate("#*cd"));
 		node.merge(NodeFactory.generate("##*d"));
 		node.merge(NodeFactory.generate("#*#d"));
+		node.merge(NodeFactory.generate("#*d"));
 		
 		// ensure backward compatibility
 		node.merge(NodeFactory.generate("###d"));
@@ -71,7 +72,7 @@ public class NodeFindTest {
 		Assert.assertEquals(4, node.children().size());
 		
 		Set<Node> found = node.find("abcd");
-		Assert.assertEquals(13, found.size());		
+		Assert.assertEquals(14, found.size());		
 	}
 	
 	@Test
@@ -102,6 +103,45 @@ public class NodeFindTest {
 		
 		Set<Node> found = node.find("abcd");
 		Assert.assertEquals(12, found.size());		
+	}
+	
+	@Test
+	public void testExactWithWildcards() {
+		Node node = NodeFactory.generate("abcd");
+		node.merge(NodeFactory.generate("a*d"));
+		node.merge(NodeFactory.generate("a*cd"));
+		node.merge(NodeFactory.generate("ab*d"));
+		node.merge(NodeFactory.generate("abc*"));
+		node.merge(NodeFactory.generate("a*c*"));
+		node.merge(NodeFactory.generate("*b*d"));
+		node.merge(NodeFactory.generate("*bcd"));
+		
+		// ensure that wildcards can mix
+		node.merge(NodeFactory.generate("#*cd"));
+		node.merge(NodeFactory.generate("##*d"));
+		node.merge(NodeFactory.generate("#*#d"));
+		
+		// ensure backward compatibility
+		node.merge(NodeFactory.generate("###d"));
+		
+		// full wildcard
+		node.merge(NodeFactory.generate("*"));
+		
+		// do not match
+		node.merge(NodeFactory.generate("e*"));
+		node.merge(NodeFactory.generate("*e"));
+
+		// make sure root is calculated properly
+		Assert.assertEquals(4, node.children().size());
+		
+		Set<Node> found = node.find("abcd", true);
+		Assert.assertEquals(1, found.size());		
+		
+		found = node.find("a*d", true);
+		Assert.assertEquals(1, found.size());
+		
+		found = node.find("#*cd", true);
+		Assert.assertEquals(1, found.size());
 	}
 	
 }

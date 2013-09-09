@@ -14,15 +14,15 @@ import com.google.common.base.Strings;
 
 public class NodeFindStressTest {
 
-	private static final int SIZE = 20000;
+	private static final int SIZE = 100;
 	
-	private static final int LENGTH = 20;
+	private static final int LENGTH = 160;
 	
 	@Test
 	public void stressWithWildcards() {
 		Logger logger = LoggerFactory.getLogger(this.getClass()); 
 		
-		Node node = new RootNode();
+		Node node = NodeFactory.generate("*");
 		long start = System.currentTimeMillis();
 		for(long i = 0; i < NodeFindStressTest.SIZE; i++) {
 			String generated = this.generate(true);
@@ -30,7 +30,6 @@ public class NodeFindStressTest {
 			//System.out.println("generated: " + generated);
 			node.merge(NodeFactory.generate(generated));
 		}
-		node.merge(NodeFactory.generate("*"));
 		node.merge(NodeFactory.generate(Strings.repeat("#", NodeFindStressTest.LENGTH)));
 
 		logger.info("generation took: " + (System.currentTimeMillis() - start) + "ms");

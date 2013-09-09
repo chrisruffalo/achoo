@@ -11,39 +11,35 @@ public final class NodeFactory {
 	}
 	
 	public static Node generate(String input) {
-		RootNode root = new RootNode();
+		Node root = new RootNode();
 		
 		// return empty root if no good input provided
 		if(Strings.isNullOrEmpty(input)) {
 			return root;
 		}
 		
+		
 		Node previous = root;
 		
-		for(char current : input.toCharArray()) {
+		for(int i = 0; i < input.length(); i++) {
+			char current = input.charAt(i);
 			Node local = null;
-			if('#' == current) {
-				AnyCharacterNode any = new AnyCharacterNode(previous);
-				any.root(root);
-				local = any;
-			} else if('*' == current) {
-				WildcardNode wild = new WildcardNode(previous);
-				wild.root(root);
-				local = wild;
+			if(AnyCharacterNode.ANYCHARACTER == current) {
+				local = new AnyCharacterNode(previous);
+			} else if(WildcardNode.WILDCARD == current) {
+				local = new WildcardNode(previous);
 			} else {
-				LiteralCharacterNode literal = new LiteralCharacterNode(previous, current);
-				literal.root(root);
-				local = literal;
+				local = new LiteralCharacterNode(previous, current);
 			}
 			
-			//NodeFactory.LOGGER.trace("local: " + local.toString());
-
 			previous.merge(local);
 			previous = local;
+			
+			//NodeFactory.LOGGER.info("local: {}, parent: {}", local.toString(), local.parent().toString());
 		}
 		// previous is, at this point, the highest/deepest point
 		previous.merge(new TerminationNode(previous));
-		
+
 		// return the root
 		return root;
 	}	

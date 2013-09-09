@@ -28,10 +28,6 @@ public abstract class AbstractNode implements Node {
 	public Map<Character, Node> children() {
 		return this.children;
 	}
-	
-	protected void putChild(char key, Node value) {
-		this.children.put(key, value);
-	}
 
 	@Override
 	public void merge(Node node) {

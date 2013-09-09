@@ -28,11 +28,6 @@ public class TerminationNode extends AbstractNode {
 	}
 
 	@Override
-	protected void putChild(char key, Node value) {
-		return;
-	}
-
-	@Override
 	public void merge(Node node) {
 		return;
 	}
@@ -54,6 +49,8 @@ public class TerminationNode extends AbstractNode {
 
 	@Override
 	public Set<String> paths() {
+		// termination nodes are the only nodes that actually ever
+		// return anything so that it rolls up back the tree
 		return Collections.singleton(this.name());
 	}
 	

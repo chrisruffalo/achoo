@@ -1,14 +1,15 @@
 package com.achoo.topicstore.trie;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class RootNode extends AbstractNode {
 
 	static final char ROOT = '\0';
 	
-	RootNode() {
-		super(null);
+	RootNode(Map<Character, Node> backingTable) {
+		super(null, backingTable);
 	}
 	
 	@Override
@@ -30,7 +31,7 @@ public class RootNode extends AbstractNode {
 	@Override
 	public Set<String> paths() {
 		Set<String> paths = new LinkedHashSet<>();
-		for(Node child : this.children().values()) {
+		for(Node child : this.children()) {
 			paths.addAll(child.paths());
 		}
 		return paths;

@@ -1,7 +1,6 @@
 package com.achoo.topicstore.trie;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 public class TerminationNode extends AbstractNode {
@@ -9,7 +8,7 @@ public class TerminationNode extends AbstractNode {
 	static final char TERMINATED = '\0';
 	
 	TerminationNode(Node parent) {
-		super(parent);		
+		super(parent, null);		
 	}
 	
 	@Override
@@ -23,8 +22,8 @@ public class TerminationNode extends AbstractNode {
 	}
 
 	@Override
-	public Map<Character, Node> children() {
-		return Collections.emptyMap();
+	public Set<Node> children() {
+		return Collections.emptySet();
 	}
 
 	@Override

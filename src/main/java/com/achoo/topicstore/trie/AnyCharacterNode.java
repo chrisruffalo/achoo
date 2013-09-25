@@ -1,9 +1,12 @@
 package com.achoo.topicstore.trie;
 
+import java.util.Map;
+
+
 public class AnyCharacterNode extends AbstractNode {
 
-	AnyCharacterNode(Node parent) {
-		super(parent);
+	AnyCharacterNode(Node parent, Map<Character, Node> backingTable) {
+		super(parent, backingTable);
 	}
 
 	static final char ANYCHARACTER = '#';

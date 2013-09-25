@@ -1,7 +1,6 @@
 package com.achoo.topicstore.trie;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 public interface Node {
@@ -14,7 +13,7 @@ public interface Node {
 	
 	void find(Set<Node> destination, String input, int index, boolean exact);
 	
-	Map<Character, Node> children();
+	Collection<Node> children();
 	
 	void merge(Node node);
 	

@@ -1,12 +1,14 @@
 package com.achoo.topicstore.trie;
 
+import java.util.Map;
+
 
 public class LiteralCharacterNode extends AbstractNode {
 
 	private final Character value;	
 	
-	LiteralCharacterNode(Node parent, char literal) {
-		super(parent);
+	LiteralCharacterNode(Node parent, char literal, Map<Character, Node> backingTable) {
+		super(parent, backingTable);
 		
 		this.value = Character.valueOf(literal);
 	}

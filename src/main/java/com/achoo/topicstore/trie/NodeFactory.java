@@ -1,5 +1,9 @@
 package com.achoo.topicstore.trie;
 
+import gnu.trove.map.hash.THashMap;
+
+import java.util.Map;
+
 import com.google.common.base.Strings;
 
 public final class NodeFactory {
@@ -11,7 +15,10 @@ public final class NodeFactory {
 	}
 	
 	public static Node generate(String input) {
-		Node root = new RootNode();
+		// create table that will back partition table
+		Map<Long, Node> backer = new THashMap<>();
+
+		Node root = new RootNode(new PartitionMap(0, backer));
 		
 		// return empty root if no good input provided
 		if(Strings.isNullOrEmpty(input)) {
@@ -22,13 +29,17 @@ public final class NodeFactory {
 		
 		for(int i = 0; i < input.length(); i++) {
 			char current = input.charAt(i);
+			
+			// create partition (partition can't really start at 0 or 1 for safety			
+			PartitionMap partition = new PartitionMap(i+1, backer);
+			
 			Node local = null;
 			if(AnyCharacterNode.ANYCHARACTER == current) {
-				local = new AnyCharacterNode(previous);
+				local = new AnyCharacterNode(previous, partition);
 			} else if(WildcardNode.WILDCARD == current) {
-				local = new WildcardNode(previous);
+				local = new WildcardNode(previous, partition);
 			} else {
-				local = new LiteralCharacterNode(previous, current);
+				local = new LiteralCharacterNode(previous, current, partition);
 			}
 			
 			previous.merge(local);

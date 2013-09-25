@@ -3,7 +3,6 @@ package com.achoo.topicstore.trie;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -18,17 +17,21 @@ public abstract class AbstractNode implements Node {
 	
 	private String cachedName;
 	
-	AbstractNode(Node parent) {
+	AbstractNode(Node parent, Map<Character, Node> backingTable) {
 		this.parent = parent;
-		this.children = new LinkedHashMap<>();
 		this.cachedName = null;
+		this.children = backingTable;
 	}
 	
 	@Override
-	public Map<Character, Node> children() {
-		return this.children;
+	public Collection<Node> children() {
+		return this.children.values();
 	}
 
+	protected Node get(Character key) {
+		return this.children.get(key);
+	}
+	
 	@Override
 	public void merge(Node node) {
 		if(node == null) {
@@ -36,14 +39,14 @@ public abstract class AbstractNode implements Node {
 		}
 
 		if(node instanceof RootNode) {
-			this.merge(node.children().values());
+			this.merge(node.children());
 			return;
 		}
 	
 		// update child if it exists
 		Node localChild = this.children.get(node.value());
 		if(localChild != null) {
-			localChild.merge(node.children().values());
+			localChild.merge(node.children());
 		} else {
 			// otherwise insert child directly
 			this.children.put(node.value(), node);
@@ -122,7 +125,7 @@ public abstract class AbstractNode implements Node {
 	@Override
 	public Set<String> paths() {
 		Set<String> paths = new LinkedHashSet<>();
-		for(Node child : this.children().values()) {
+		for(Node child : this.children()) {
 			for(String path : child.paths()) {
 				if(!Strings.isNullOrEmpty(path)) {
 					paths.add(path);

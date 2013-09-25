@@ -14,9 +14,9 @@ import com.google.common.base.Strings;
 
 public class NodeFindStressTest {
 
-	private static final int SIZE = 100;
+	private static final int SIZE = 1000000;
 	
-	private static final int LENGTH = 160;
+	private static final int LENGTH = 30;
 	
 	@Test
 	public void stressWithWildcards() {

@@ -1,5 +1,6 @@
 package com.achoo.topicstore.trie;
 
+import java.util.Map;
 import java.util.Set;
 
 
@@ -8,8 +9,8 @@ public class WildcardNode extends AbstractNode {
 
 	static final char WILDCARD = '*';
 	
-	WildcardNode(Node parent) {
-		super(parent);
+	WildcardNode(Node parent, Map<Character, Node> backingTable) {
+		super(parent, backingTable);
 	}
 	
 	@Override
@@ -28,12 +29,13 @@ public class WildcardNode extends AbstractNode {
 	@Override
 	public void find(Set<Node> destination, String input, int index, boolean exact) {
 		if(!exact) {
-			if(this.children().containsKey(TerminationNode.TERMINATED)) {
+			Node terminated = this.get(TerminationNode.TERMINATED);
+			if(null != terminated) {
 				destination.add(this);
 				// fast forward to end of string
 				// in the future this might mean
 				// fast forwarding to a "." or "/" 
-				// character for heirarchical search
+				// character for hierarchical search
 				//index = input.length();
 				if(this.children().size() == 1) {
 					index = input.length();

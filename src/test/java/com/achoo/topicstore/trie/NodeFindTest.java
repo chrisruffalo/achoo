@@ -132,6 +132,9 @@ public class NodeFindTest {
 		node.merge(NodeFactory.generate("*e"));
 
 		// make sure root is calculated properly
+		for(Node child : node.children()) {
+			System.out.println("child : " + child.getClass().getName());
+		}
 		Assert.assertEquals(4, node.children().size());
 		
 		Set<Node> found = node.find("abcd", true);

@@ -1,24 +1,22 @@
 package com.achoo.topicstore.trie;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import com.achoo.exceptions.AchooRuntimeException;
 
 public class PartitionMap implements Map<Character, Node> {
 
 	private static final int BLOCK_SIZE = Character.MAX_CODE_POINT;
 	
-	private final Long start;
+	private final int partition;
 	
 	private final Map<Long, Node> backer;
 	
-	private AtomicInteger size;
-	
-	private Integer lowest;
-	
-	private Integer highest;
+	private BigInteger marker;
 	
 	private class PartitionKey implements Entry<Character, Node> {
 
@@ -53,11 +51,9 @@ public class PartitionMap implements Map<Character, Node> {
 			throw new IllegalArgumentException("Partition cannot be created with a partition less than 0");
 		}
 		
-		this.start = Long.valueOf(partition * PartitionMap.BLOCK_SIZE);
-		this.lowest = Integer.valueOf(PartitionMap.BLOCK_SIZE);
-		this.highest = Integer.valueOf(0);
+		this.partition = partition;
 		this.backer = backer;
-		this.size = new AtomicInteger(0);
+		this.marker = BigInteger.ZERO;
 	}
 	
 	@Override
@@ -66,7 +62,6 @@ public class PartitionMap implements Map<Character, Node> {
 		for(Character key : keys) {
 			this.backer.remove(this.partitionKey(key));
 		}
-		this.size.set(0);
 	}
 	
 	private Long partitionKey(Object input) {
@@ -74,7 +69,7 @@ public class PartitionMap implements Map<Character, Node> {
 			// need to throw exception here
 			return Long.valueOf(0);
 		}
-		int base = 0;
+		long base = 0;
 				
 		if(input instanceof Node) {
 			Node iNode = (Node)input;
@@ -86,7 +81,7 @@ public class PartitionMap implements Map<Character, Node> {
 		}
 
 		// finish calculations
-		base += this.start;
+		base += (((long)this.partition) * PartitionMap.BLOCK_SIZE);
 		return Long.valueOf(base);
 	}
 
@@ -103,12 +98,27 @@ public class PartitionMap implements Map<Character, Node> {
 	@Override
 	public Set<java.util.Map.Entry<Character, Node>> entrySet() {
 		Set<Entry<Character,Node>> values = new HashSet<>();
-		for(long i = (this.start + this.lowest); i <= (this.start + this.highest); i++) {
-			Node value = this.backer.get(i);
-			if(value != null) {
-				values.add(new PartitionKey(value.value(), value));
+		long start = ((long)this.partition) * PartitionMap.BLOCK_SIZE;
+		BigInteger mark = this.marker;
+		int cumulative = 0;
+		while(!BigInteger.ZERO.equals(mark)) {
+			int seek = mark.getLowestSetBit();
+			
+			mark = mark.clearBit(seek);
+			mark = mark.shiftRight(seek);
+			
+			long position = start + seek + cumulative;
+			cumulative += seek;
+			
+			Node node = this.backer.get(position);
+			if(node != null) {
+				values.add(new PartitionKey(node.value(), node));
 			}
-		}		
+		} 	
+		if(values.size() != this.size()) {
+			// bad juju
+			throw new AchooRuntimeException("value size of " + values.size() + " does not match calculated partition size of " + this.size());
+		}
 		return values;
 	}
 
@@ -120,7 +130,7 @@ public class PartitionMap implements Map<Character, Node> {
 
 	@Override
 	public boolean isEmpty() {
-		return 0 == this.size.get();
+		return this.marker.equals(BigInteger.ZERO);
 	}
 
 	@Override
@@ -138,14 +148,8 @@ public class PartitionMap implements Map<Character, Node> {
 			return null;
 		}
 		long key = this.partitionKey(arg0);
-		int adjusted = (int)(key - this.start);
-		if(adjusted < this.lowest) {
-			this.lowest = Integer.valueOf(adjusted);
-		}
-		if(adjusted > this.highest) {
-			this.highest = Integer.valueOf(adjusted);
-		}
-		this.size.incrementAndGet();
+		int adjusted = (int)(key - (((long)this.partition) * PartitionMap.BLOCK_SIZE));
+		this.marker = this.marker.setBit(adjusted);
 		return this.backer.put(key, arg1);
 	}
 
@@ -159,13 +163,15 @@ public class PartitionMap implements Map<Character, Node> {
 
 	@Override
 	public Node remove(Object arg0) {
-		this.size.decrementAndGet();
-		return this.backer.remove(this.partitionKey(arg0));
+		long key = this.partitionKey(arg0);
+		int adjusted = (int)(key - (((long)this.partition) * PartitionMap.BLOCK_SIZE));
+		this.marker = this.marker.clearBit(adjusted);
+		return this.backer.remove(key);
 	}
 
 	@Override
 	public int size() {
-		return this.size.get();
+		return this.marker.bitCount();
 	}
 
 	@Override
@@ -175,7 +181,6 @@ public class PartitionMap implements Map<Character, Node> {
 			values.add(entry.getValue());
 		}
 		return values;
-
 	}
 
 }

@@ -15,11 +15,8 @@ public abstract class AbstractNode implements Node {
 
 	private Node parent;
 	
-	private String cachedName;
-	
 	AbstractNode(Node parent, Map<Character, Node> backingTable) {
 		this.parent = parent;
-		this.cachedName = null;
 		this.children = backingTable;
 	}
 	
@@ -138,34 +135,30 @@ public abstract class AbstractNode implements Node {
 	
 	public void parent(Node parent) {
 		this.parent = parent;
-		this.cachedName = null;
 	}
 	
 	public Node parent() {
 		return this.parent;
 	}
 	
-	private String calculateName() {
+	public String name() {
 		if(this.parent != null) {
 			return this.parent.name() + this.value();
 		}
 		return ""+this.value();
 	}
 	
-	public String name() {
-		if(this.cachedName == null) {
-			this.cachedName = this.calculateName();
-		}		
-		return this.cachedName;
-	}
-	
 	public Node root() {
 		return this.parent.root();
 	}
 	
+	public int size() {
+		return this.children.size();
+	}
+	
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " [name='" + this.name() + "', value='" + this.value() + "', children='" + this.children.size() + "']";
+		return this.getClass().getSimpleName() + " [value='" + this.value() + "']";
 	}
 	
 }

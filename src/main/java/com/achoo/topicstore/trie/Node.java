@@ -34,4 +34,6 @@ public interface Node {
 	void parent(Node parent);
 	
 	Node root();
+	
+	int size();
 }

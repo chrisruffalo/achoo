@@ -32,12 +32,13 @@ public class WildcardNode extends AbstractNode {
 			Node terminated = this.get(TerminationNode.TERMINATED);
 			if(null != terminated) {
 				destination.add(this);
+				
 				// fast forward to end of string
 				// in the future this might mean
-				// fast forwarding to a "." or "/" 
+				// fast forwarding to a "." or "/"
 				// character for hierarchical search
 				//index = input.length();
-				if(this.children().size() == 1) {
+				if(this.size() == 1) {
 					index = input.length();
 				}
 			}

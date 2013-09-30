@@ -14,9 +14,9 @@ import com.google.common.base.Strings;
 
 public class NodeFindStressTest {
 
-	private static final int SIZE = 1000000;
+	private static final int SIZE = 250000;
 	
-	private static final int LENGTH = 30;
+	private static final int LENGTH = 100;
 	
 	@Test
 	public void stressWithWildcards() {
@@ -24,11 +24,17 @@ public class NodeFindStressTest {
 		
 		Node node = NodeFactory.generate("*");
 		long start = System.currentTimeMillis();
+		long nextPercent = NodeFindStressTest.SIZE / 10;
 		for(long i = 0; i < NodeFindStressTest.SIZE; i++) {
 			String generated = this.generate(true);
 			Assert.assertEquals(NodeFindStressTest.LENGTH, generated.length());
 			//System.out.println("generated: " + generated);
 			node.merge(NodeFactory.generate(generated));
+			
+			if(i > nextPercent) {
+				logger.info("generated {} (of {}) items in : {}ms", new Object[]{i, NodeFindStressTest.SIZE, (System.currentTimeMillis() - start)});
+				nextPercent = nextPercent + (NodeFindStressTest.SIZE / 10);	
+			}
 		}
 		node.merge(NodeFactory.generate(Strings.repeat("#", NodeFindStressTest.LENGTH)));
 
@@ -36,7 +42,7 @@ public class NodeFindStressTest {
 		start = System.currentTimeMillis();
 		
 		Set<Node> findSet = new LinkedHashSet<>();
-		long nextPercent = NodeFindStressTest.SIZE / 10;
+		nextPercent = NodeFindStressTest.SIZE / 10;
 		for(long i = 0; i < NodeFindStressTest.SIZE; i++) {
 			String generated = this.generate(false);
 			Assert.assertEquals(NodeFindStressTest.LENGTH, generated.length());

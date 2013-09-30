@@ -15,6 +15,7 @@ public final class NodeFactory {
 	}
 	
 	public static Node generate(String input) {
+			
 		// create table that will back partition table
 		Map<Long, Node> backer = new THashMap<>();
 

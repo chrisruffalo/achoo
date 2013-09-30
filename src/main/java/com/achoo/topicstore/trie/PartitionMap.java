@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.achoo.exceptions.AchooRuntimeException;
+import com.googlecode.javaewah32.EWAHCompressedBitmap32;
 
 public class PartitionMap implements Map<Character, Node> {
 
@@ -16,7 +17,7 @@ public class PartitionMap implements Map<Character, Node> {
 	
 	private final Map<Long, Node> backer;
 	
-	private BigInteger marker;
+	private EWAHCompressedBitmap32 marker;
 	
 	private class PartitionKey implements Entry<Character, Node> {
 
@@ -53,7 +54,7 @@ public class PartitionMap implements Map<Character, Node> {
 		
 		this.partition = partition;
 		this.backer = backer;
-		this.marker = BigInteger.ZERO;
+		this.marker = new EWAHCompressedBitmap32();
 	}
 	
 	@Override
@@ -62,6 +63,7 @@ public class PartitionMap implements Map<Character, Node> {
 		for(Character key : keys) {
 			this.backer.remove(this.partitionKey(key));
 		}
+		this.marker.clear();
 	}
 	
 	private Long partitionKey(Object input) {
@@ -99,22 +101,15 @@ public class PartitionMap implements Map<Character, Node> {
 	public Set<java.util.Map.Entry<Character, Node>> entrySet() {
 		Set<Entry<Character,Node>> values = new HashSet<>();
 		long start = ((long)this.partition) * PartitionMap.BLOCK_SIZE;
-		BigInteger mark = this.marker;
-		int cumulative = 0;
-		while(!BigInteger.ZERO.equals(mark)) {
-			int seek = mark.getLowestSetBit();
-			
-			mark = mark.clearBit(seek);
-			mark = mark.shiftRight(seek);
-			
-			long position = start + seek + cumulative;
-			cumulative += seek;
-			
+
+		for(int i : this.marker.toArray()) {
+			long position = start + i;
 			Node node = this.backer.get(position);
 			if(node != null) {
 				values.add(new PartitionKey(node.value(), node));
-			}
-		} 	
+			}			
+		}
+	
 		if(values.size() != this.size()) {
 			// bad juju
 			throw new AchooRuntimeException("value size of " + values.size() + " does not match calculated partition size of " + this.size());
@@ -149,7 +144,9 @@ public class PartitionMap implements Map<Character, Node> {
 		}
 		long key = this.partitionKey(arg0);
 		int adjusted = (int)(key - (((long)this.partition) * PartitionMap.BLOCK_SIZE));
-		this.marker = this.marker.setBit(adjusted);
+		EWAHCompressedBitmap32 given = new EWAHCompressedBitmap32();
+		given.set(adjusted);
+		this.marker = this.marker.or(given);
 		return this.backer.put(key, arg1);
 	}
 
@@ -165,13 +162,15 @@ public class PartitionMap implements Map<Character, Node> {
 	public Node remove(Object arg0) {
 		long key = this.partitionKey(arg0);
 		int adjusted = (int)(key - (((long)this.partition) * PartitionMap.BLOCK_SIZE));
-		this.marker = this.marker.clearBit(adjusted);
+		EWAHCompressedBitmap32 inverse = new EWAHCompressedBitmap32();
+		inverse.set(adjusted);
+		this.marker = this.marker.andNot(inverse);
 		return this.backer.remove(key);
 	}
 
 	@Override
 	public int size() {
-		return this.marker.bitCount();
+		return this.marker.toArray().length;
 	}
 
 	@Override

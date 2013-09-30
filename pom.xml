@@ -21,6 +21,10 @@
 		<trove.version>3.0.3</trove.version>
 	</properties>
 
+	<!-- supplementary repositories -->
+	<repositories>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 		    <groupId>io.netty</groupId>
@@ -55,6 +59,13 @@
 		    <artifactId>trove4j</artifactId>
 		    <version>${trove.version}</version>
 		</dependency>	
+
+		<!-- compressed bitset -->		
+	    <dependency>
+	        <groupId>com.googlecode.javaewah</groupId>
+	        <artifactId>JavaEWAH</artifactId>
+	        <version>0.7.5</version>
+	    </dependency>
 	
 		<!-- testing/junit -->
 		<dependency>
@@ -63,11 +74,6 @@
 		  <version>${junit.version}</version>
 		</dependency>
 	</dependencies>
-
-	<!-- supplementary repositories -->
-	<repositories>
-
-	</repositories>
 
 	<build>
 		<pluginManagement>

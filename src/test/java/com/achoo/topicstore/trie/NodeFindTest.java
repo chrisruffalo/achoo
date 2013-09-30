@@ -99,7 +99,7 @@ public class NodeFindTest {
 		node.merge(NodeFactory.generate("*e"));
 
 		// make sure root is calculated properly
-		Assert.assertEquals(4, node.children().size());
+		Assert.assertEquals(4, node.size());
 		
 		Set<Node> found = node.find("abcd");
 		Assert.assertEquals(12, found.size());		

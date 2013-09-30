@@ -14,7 +14,7 @@ import com.google.common.base.Strings;
 
 public class NodeFindStressTest {
 
-	private static final int SIZE = 250000;
+	private static final int SIZE = 25000;
 	
 	private static final int LENGTH = 100;
 	

@@ -4,7 +4,7 @@ import gnu.trove.map.hash.THashMap;
 
 import java.util.Map;
 
-import com.googlecode.javaewah.EWAHCompressedBitmap;
+import com.googlecode.javaewah32.EWAHCompressedBitmap32;
 
 public class SharedMarker {
 
@@ -17,7 +17,7 @@ public class SharedMarker {
 	// with the size of the PARTITION
 	private static final int BOUNDARY = (((Integer.MAX_VALUE - 32)) / SharedMarker.PARTITION_WIDTH) * SharedMarker.PARTITION_WIDTH;
 	
-	private Map<Long, EWAHCompressedBitmap> markers;
+	private Map<Long, EWAHCompressedBitmap32> markers;
 	
 	public SharedMarker() {
 		this.markers = new THashMap<>();
@@ -33,7 +33,7 @@ public class SharedMarker {
 		int remainder = (int)(position % SharedMarker.BOUNDARY);
 		
 		// get partition
-		EWAHCompressedBitmap bitmap = this.map(partition);
+		EWAHCompressedBitmap32 bitmap = this.map(partition);
 
 		// return value
 		return bitmap.get(remainder);
@@ -49,10 +49,10 @@ public class SharedMarker {
 		int remainder = (int)(position % SharedMarker.BOUNDARY);
 		
 		// get partition
-		EWAHCompressedBitmap bitmap = this.map(partition);
+		EWAHCompressedBitmap32 bitmap = this.map(partition);
 		
 		// create aligned bit set
-		EWAHCompressedBitmap manipulate = new EWAHCompressedBitmap();
+		EWAHCompressedBitmap32 manipulate = new EWAHCompressedBitmap32();
 		manipulate.set(remainder);
 		
 		// manipulate according to logic
@@ -67,10 +67,10 @@ public class SharedMarker {
 		this.markers.put(partition, bitmap);
 	}
 
-	private EWAHCompressedBitmap map(long partition) {
-		EWAHCompressedBitmap bitmap = this.markers.get(partition);
+	private EWAHCompressedBitmap32 map(long partition) {
+		EWAHCompressedBitmap32 bitmap = this.markers.get(partition);
 		if(bitmap == null) {
-			bitmap = new EWAHCompressedBitmap();
+			bitmap = new EWAHCompressedBitmap32();
 			this.markers.put(partition, bitmap);
 		}
 		return bitmap;
@@ -92,7 +92,7 @@ public class SharedMarker {
 	
 	private long[] positions(long partition, long base, int start, int stop) {
 		// get the relevant slice
-		EWAHCompressedBitmap set = this.slice(partition, start, stop);
+		EWAHCompressedBitmap32 set = this.slice(partition, start, stop);
 		
 		// copy results into an array and 
 		// add the base offset
@@ -120,21 +120,21 @@ public class SharedMarker {
 		return this.slice(partition, begin, end).cardinality();
 	}
 	
-	private EWAHCompressedBitmap slice(long partition, int start, int stop) {
-		EWAHCompressedBitmap bitmap = this.map(partition);
+	private EWAHCompressedBitmap32 slice(long partition, int start, int stop) {
+		EWAHCompressedBitmap32 bitmap = this.map(partition);
 
 		// mask off the lower bits
-		EWAHCompressedBitmap lowerMask = new EWAHCompressedBitmap();
+		EWAHCompressedBitmap32 lowerMask = new EWAHCompressedBitmap32();
 		lowerMask.setSizeInBits(start, true);
 		
 		//  mask off the upper bits
-		EWAHCompressedBitmap upperMask = new EWAHCompressedBitmap();
+		EWAHCompressedBitmap32 upperMask = new EWAHCompressedBitmap32();
 		upperMask.setSizeInBits(stop, true);
 		upperMask = upperMask.andNot(lowerMask);
 		
 		// create a copy of the input bitmask and mask off the upper
 		// and lower portions
-		EWAHCompressedBitmap set = bitmap.and(upperMask);
+		EWAHCompressedBitmap32 set = bitmap.and(upperMask);
 		return set;
 	}
 	

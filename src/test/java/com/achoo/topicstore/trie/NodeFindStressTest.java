@@ -16,7 +16,7 @@ public class NodeFindStressTest {
 
 	private static final int LOG_INTERVAl = 10;
 	
-	private static final int SIZE = 1000000;
+	private static final int SIZE = 1000;
 	
 	private static final int LENGTH = 15;
 	

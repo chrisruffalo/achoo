@@ -18,8 +18,9 @@ public final class NodeFactory {
 			
 		// create table that will back partition table
 		Map<Long, Node> backer = new THashMap<>();
-
-		Node root = new RootNode(new PartitionMap(0, backer));
+		SharedMarker marker = new SharedMarker();
+		
+		Node root = new RootNode(new PartitionMap(0, backer, marker));
 		
 		// return empty root if no good input provided
 		if(Strings.isNullOrEmpty(input)) {
@@ -32,7 +33,7 @@ public final class NodeFactory {
 			char current = input.charAt(i);
 			
 			// create partition (partition can't really start at 0 or 1 for safety			
-			PartitionMap partition = new PartitionMap(i+1, backer);
+			PartitionMap partition = new PartitionMap(i+1, backer, marker);
 			
 			Node local = null;
 			if(AnyCharacterNode.ANYCHARACTER == current) {

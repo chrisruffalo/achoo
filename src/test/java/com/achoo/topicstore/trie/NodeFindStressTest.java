@@ -16,9 +16,9 @@ public class NodeFindStressTest {
 
 	private static final int LOG_INTERVAl = 10;
 	
-	private static final int SIZE = 10000;
+	private static final int SIZE = 1000000;
 	
-	private static final int LENGTH = 30;
+	private static final int LENGTH = 15;
 	
 	@Test
 	public void stressWithWildcards() {

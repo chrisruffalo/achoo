@@ -17,7 +17,7 @@ public class PartitionMapTest {
 		Map<Integer, PartitionMap> selections = new HashMap<>();
 		
 		for(int i = 1; i <= PartitionMapTest.SIZE; i++) {
-			PartitionMap partition = new PartitionMap(i, backer);
+			PartitionMap partition = new PartitionMap(i, backer, new SharedMarker());
 			partition.put('a', new LiteralCharacterNode(null, 'a', partition));
 			partition.put('e', new LiteralCharacterNode(null, 'e', partition));
 			

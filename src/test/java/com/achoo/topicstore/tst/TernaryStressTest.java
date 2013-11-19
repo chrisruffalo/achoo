@@ -12,11 +12,12 @@ import com.google.common.base.Strings;
 
 public class TernaryStressTest {
 
+	// in percent
 	private static final int LOG_INTERVAL = 10;
 	
-	private static final int SIZE = 2000000;
+	private static final int SIZE = 75000;
 	
-	private static final int LENGTH = 30;
+	private static final int LENGTH = 200;
 	
 	@Test
 	public void stressWithWildcards() {

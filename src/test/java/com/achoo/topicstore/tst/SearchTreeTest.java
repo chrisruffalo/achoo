@@ -1,11 +1,8 @@
 package com.achoo.topicstore.tst;
 
-import java.util.Set;
-
-import org.junit.Assert;
 import org.junit.Test;
 
-public class SearchTreeTest {
+public class SearchTreeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void doubleRepeatingAnyAndLiteralTest() {
@@ -20,47 +17,26 @@ public class SearchTreeTest {
 		tree.print();
 		
 		// these should not (exact) match
-		this.lookupCheck(tree, 0, "a##z", true);
-		this.lookupCheck(tree, 0, "abcd#z", true);
-		this.lookupCheck(tree, 0, "aaaaa", true);
-		this.lookupCheck(tree, 0, "aazz", true);
+		this.check(tree, 0, "a##z", true);
+		this.check(tree, 0, "abcd#z", true);
+		this.check(tree, 0, "aaaaa", true);
+		this.check(tree, 0, "aazz", true);
 		
 		// these should exact match
-		this.lookupCheck(tree, 1, "a####z", true);
-		this.lookupCheck(tree, 1, "abcdez", true);
-		this.lookupCheck(tree, 1, "abc#ez", true);
-		this.lookupCheck(tree, 2, "aa#z#z", true);
-		this.lookupCheck(tree, 1, "aa##zz", true);
+		this.check(tree, 1, "a####z", true, "repeat-wild");
+		this.check(tree, 1, "abcdez", true, "straight");
+		this.check(tree, 1, "abc#ez", true, "one-wild");
+		this.check(tree, 2, "aa#z#z", true, "doulbe-a", "double-double");
+		this.check(tree, 1, "aa##zz", true, "aa-zzzzzzz");
 		
 		// these should not inexact match
-		this.lookupCheck(tree, 0, "bcdefz", false);
-		this.lookupCheck(tree, 0, "acz", false);
-		this.lookupCheck(tree, 0, "accz", false);
-		this.lookupCheck(tree, 0, "acccz", false);
-		this.lookupCheck(tree, 0, "aazcz", false);
+		this.check(tree, 0, "bcdefz", false);
+		this.check(tree, 0, "acz", false);
+		this.check(tree, 0, "accz", false);
+		this.check(tree, 0, "acccz", false);
+		this.check(tree, 0, "aazcz", false);
 		
 		// these should work with inexact match
-		this.lookupCheck(tree, 2, "aabbzz", false);
+		this.check(tree, 3, "abcdez", false, "repeat-wild", "straight", "one-wild");
 	}
-	
-	private void lookupCheck(SearchTree<String> tree, int expected, String key, boolean exact) {
-		Set<String> results = tree.lookup(key, exact);
-		if(expected != results.size()) {
-			StringBuilder builder = new StringBuilder();
-			builder.append("found: {");
-			boolean first = true;
-			for(String result : results) {
-				if(!first) {
-					builder.append(", ");
-				}
-				first = false;
-				builder.append(result);
-				
-			}
-			builder.append("}");
-			System.out.println(builder.toString());
-		}
-		Assert.assertEquals(expected, results.size());
-	}
-	
 }

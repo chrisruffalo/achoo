@@ -2,17 +2,14 @@ package com.achoo.topicstore.tst;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.TreeSet;
 
-public class AnyCharacterNode<D> extends AbstractNode<D> {
+public class AnyCharacterNode<D> extends DepthContentNode<D> {
 	
 	public static final Character ANY_CHARACTER = '#';
 	
 	private InternalNode<D> match;
 	
 	private InternalNode<D> shunt;
-
-	private Set<D> contents;
 	
 	@Override
 	public void lookup(Set<D> results, char[] key, int index, boolean exact) {
@@ -26,9 +23,7 @@ public class AnyCharacterNode<D> extends AbstractNode<D> {
 		// exact match
 		if(exact && AnyCharacterNode.ANY_CHARACTER.equals(local)) {
 			if(index == key.length - 1) {
-				if(this.contents != null && !this.contents.isEmpty()) {
-					results.addAll(this.contents);
-				}
+				results.addAll(this.getContentAtDepth(index));
 			} else if(this.match != null) {
 				this.match.lookup(results, key, index+1, exact);
 			}
@@ -38,9 +33,7 @@ public class AnyCharacterNode<D> extends AbstractNode<D> {
 			}
 		} else {
 			if(index == key.length - 1) {
-				if(this.contents != null && !this.contents.isEmpty()) {
-					results.addAll(this.contents);
-				}
+				results.addAll(this.getContentAtDepth(index));
 			} else if(this.match != null) {
 				this.match.lookup(results, key, index+1, exact);
 			}
@@ -62,16 +55,7 @@ public class AnyCharacterNode<D> extends AbstractNode<D> {
 		if(AnyCharacterNode.ANY_CHARACTER.equals(local)) {
 			// matches!  use match branch!
 			if(index == key.length - 1) {
-				if(values != null && !values.isEmpty()) {
-					if(this.contents == null) {
-						this.contents = new TreeSet<>();
-					}
-					for(D value : values) {
-						if(value != null) {
-							this.contents.add(value);
-						}
-					}
-				}				
+				this.addContentAtDepth(index, values);
 			} else {
 				if(this.match == null) {
 					Character nextCharacter = Character.valueOf(key[index+1]);

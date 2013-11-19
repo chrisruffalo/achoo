@@ -1,12 +1,10 @@
 package com.achoo.topicstore.tst;
 
 
-import java.util.Set;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LiteralNodeTest {
+public class LiteralNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testBasicAdd() {
@@ -35,13 +33,18 @@ public class LiteralNodeTest {
 		base.add("cot", "valueCot");
 		base.add("cut", "valueCut");
 		
-		Assert.assertEquals("valueCat", base.lookup("cat", true).iterator().next());
-		Assert.assertEquals("valueCot", base.lookup("cot", true).iterator().next());
-		Assert.assertEquals("valueCut", base.lookup("cut", true).iterator().next());
+		this.check(base, 1, "cat", true, "valueCat");
+		this.check(base, 1, "cot", true, "valueCot");
+		this.check(base, 1, "cut", true, "valueCut");
+		
+		// fuzzy match should have no bearing
+		this.check(base, 1, "cat", false, "valueCat");
+		this.check(base, 1, "cot", false, "valueCot");
+		this.check(base, 1, "cut", false, "valueCut");
 	}
 	
 	@Test
-	public void testAdvancedAdd() {
+	public void testRepeatingAdd() {
 		LiteralNode<String> base = new LiteralNode<>('q');
 		base.add("qq", "quit");
 		Assert.assertNull(base.low());
@@ -60,24 +63,16 @@ public class LiteralNodeTest {
 		base.add("cooo", "longer");
 		base.add("coooo", "longest");
 		
-		Set<String> results = base.lookup("co", true);
-		Assert.assertEquals(1, results.size());
+		this.check(base, 1, "co", true, "company");
+		this.check(base, 1, "coo", true, "dove");
+		this.check(base, 1, "cooo", true, "longer");
+		this.check(base, 1, "coooo", true, "longest");
 		
-		results = base.lookup("co", true);
-		Assert.assertEquals(1, results.size());
-		Assert.assertEquals("company", results.iterator().next());
-
-		results = base.lookup("coo", true);
-		Assert.assertEquals(1, results.size());
-		Assert.assertEquals("dove", results.iterator().next());
-		
-		results = base.lookup("cooo", true);
-		Assert.assertEquals(1, results.size());
-		Assert.assertEquals("longer", results.iterator().next());
-		
-		results = base.lookup("coooo", true);
-		Assert.assertEquals(1, results.size());
-		Assert.assertEquals("longest", results.iterator().next());
+		// exactness of match should have no impact
+		this.check(base, 1, "co", false, "company");
+		this.check(base, 1, "coo", false, "dove");
+		this.check(base, 1, "cooo", false, "longer");
+		this.check(base, 1, "coooo", false, "longest");
 	}
 }
 

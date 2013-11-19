@@ -1,11 +1,9 @@
 package com.achoo.topicstore.tst;
 
-import java.util.Set;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AnyCharacterNodeTest {
+public class AnyCharacterNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testBasicStructureAndLookup() {
@@ -14,7 +12,6 @@ public class AnyCharacterNodeTest {
 		any.add("#bc", "any");
 		any.add("abc", "first");
 		any.add("gbc", "second");
-		any.print();
 		
 		LiteralNode<String> shunt = (LiteralNode<String>)any.shunt();
 		
@@ -35,22 +32,19 @@ public class AnyCharacterNodeTest {
 		LiteralNode<String> doubleHigh = (LiteralNode<String>)high.high();
 		Assert.assertEquals(Character.valueOf('c'), doubleHigh.point());
 		
-		// so now, to the lookup
-		Set<String> results = any.lookup("#bc", true);
-		Assert.assertEquals(1, results.size());
+		// basic lookup
+		this.check(any, 1, "#bc", true, "any");
 		
 		// no results, # character is mandatory but 'any'
-		results = any.lookup("bc", false);
-		Assert.assertEquals(0, results.size());
-		
-		results = any.lookup("xbc", false);
-		Assert.assertEquals(1, results.size());
+		this.check(any, 0, "bc", true);
+		this.check(any, 0, "bc", false);
+
+		// wild card first character
+		this.check(any, 1, "xbc", false, "any");
 	
-		results = any.lookup("gbc", false);
-		Assert.assertEquals(2, results.size());
-		
-		results = any.lookup("abc", false);
-		Assert.assertEquals(2, results.size());
+		// multi wildcard
+		this.check(any, 2, "gbc", false, "any", "second");
+		this.check(any, 2, "abc", false, "any", "first");
 	}
 	
 	@Test
@@ -61,19 +55,16 @@ public class AnyCharacterNodeTest {
 		any.add("a##d", "dee");
 		any.add("a###", "all");
 		
-		Set<String> results = any.lookup("abbc", true);
-		Assert.assertEquals(0, results.size());
+		// comparison between exact and fuzzy
+		this.check(any, 0, "abbc", true);
+		this.check(any, 2, "abbc", false, "cee", "all");
 
-		results = any.lookup("abdf", false);
-		Assert.assertEquals(1, results.size());
-		
-		results = any.lookup("abdf", true);
-		Assert.assertEquals(0, results.size());
-		
-		results = any.lookup("abbc", false);
-		Assert.assertEquals(2, results.size());
-		
-		results = any.lookup("abbd", false);
-		Assert.assertEquals(2, results.size());		
+		// other misc checks
+		this.check(any, 1, "abdf", false);
+		this.check(any, 0, "abdf", true);
+
+		// matching checks
+		this.check(any, 2, "abbc", false, "all", "cee");
+		this.check(any, 2, "abbd", false, "all", "dee");				
 	}
 }

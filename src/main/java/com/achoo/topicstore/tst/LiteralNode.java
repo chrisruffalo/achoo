@@ -1,20 +1,15 @@
 package com.achoo.topicstore.tst;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
-class LiteralNode<D> extends AbstractNode<D> {
+class LiteralNode<D> extends DepthContentNode<D> {
 	
 	private Character point;
 	
 	private InternalNode<D> higher;
 	
 	private InternalNode<D> lower;
-	
-	private Map<Integer, Set<D>> depthMap;
 	
 	public LiteralNode(char local) {
 		// set value
@@ -30,12 +25,7 @@ class LiteralNode<D> extends AbstractNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.point.equals(local)) {
 			if(index == key.length - 1) {
-				if(this.depthMap != null) {
-					Set<D> contents = this.depthMap.get(index);
-					if(contents != null) {
-						results.addAll(contents);
-					}
-				}
+				results.addAll(this.getContentAtDepth(index));
 			} else {
 				this.lookup(results, key, index+1, exact);
 			}
@@ -60,21 +50,7 @@ class LiteralNode<D> extends AbstractNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.point.equals(local)) {
 			if(index == key.length - 1) {
-				if(values != null && !values.isEmpty()) {
-					if(this.depthMap == null) {
-						this.depthMap = new TreeMap<>();
-					}
-					Set<D> contents = this.depthMap.get(index);
-					if(contents == null) {
-						contents = new TreeSet<>();
-						this.depthMap.put(index, contents);
-					}
-					for(D value : values) {
-						if(value != null) {
-							contents.add(value);
-						}
-					}
-				}
+				this.addContentAtDepth(index, values);
 			} else {
 				this.add(key, index+1, values);
 			}
@@ -105,45 +81,6 @@ class LiteralNode<D> extends AbstractNode<D> {
 	@Override
 	public boolean extend(boolean exact) {
 		return false;
-	}
-	
-	private String contentString() {
-		if(this.depthMap == null || this.depthMap.isEmpty()) {
-			return "{}";
-		}
-		StringBuilder builder = new StringBuilder();
-		boolean first = true;
-		for(Map.Entry<Integer, Set<D>> entry : this.depthMap.entrySet()) {
-			Integer key = entry.getKey();
-			Set<D> set = entry.getValue();
-			if(set == null || set.isEmpty()) {
-				continue;
-			}
-			if(!first) {
-				builder.append(", ");
-			}
-			first = false;
-			builder.append(key);
-			builder.append(":{");
-			boolean innerFirst = true;
-			for(D value : set) {
-				if(value == null) {
-					continue;
-				}
-				String printString = String.valueOf(value);
-				if(printString == null || printString.isEmpty()) {
-					continue;
-				}
-				if(!innerFirst) {
-					builder.append(", ");
-				}
-				innerFirst = false;
-				builder.append(printString);
-			}
-			builder.append("}");
-		}
-		
-		return builder.toString();
 	}
 	
 	Character point() {

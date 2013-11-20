@@ -19,8 +19,6 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 		tree.add("ffff", "f4");
 		tree.add("fffff", "f5");
 		
-		tree.print();
-		
 		// these should not (exact) match
 		this.check(tree, 0, "a##z", true);
 		this.check(tree, 0, "abcd#z", true);

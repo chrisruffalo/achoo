@@ -13,24 +13,24 @@ public class AnyCharacterNodeTest extends AbstractTernaryTestCase {
 		any.add("abc", "first");
 		any.add("gbc", "second");
 		
-		LiteralNode<String> shunt = (LiteralNode<String>)any.shunt();
+		LiteralNode<String> firstBranch = (LiteralNode<String>)any.high();
 		
-		Assert.assertNotNull(shunt);
-		Assert.assertEquals(Character.valueOf('a'), shunt.point());
+		Assert.assertNotNull(firstBranch);
+		Assert.assertEquals(Character.valueOf('b'), firstBranch.point());
 		
 		// get b-point's children (c and a)
-		LiteralNode<String> high = (LiteralNode<String>)shunt.high();
-		LiteralNode<String> low = (LiteralNode<String>)shunt.low();
+		LiteralNode<String> high = (LiteralNode<String>)firstBranch.high();
+		LiteralNode<String> low = (LiteralNode<String>)firstBranch.low();
 		
 		Assert.assertNotNull(high);
-		Assert.assertNull(low);
+		Assert.assertNotNull(low);
 		
 		// high is available
-		Assert.assertEquals(Character.valueOf('b'), high.point());
+		Assert.assertEquals(Character.valueOf('c'), high.point());
 		
-		// now, for c, it should have gone shunt(a) -> high(b) -> high(c)
+		// # -> b -> c -> g
 		LiteralNode<String> doubleHigh = (LiteralNode<String>)high.high();
-		Assert.assertEquals(Character.valueOf('c'), doubleHigh.point());
+		Assert.assertEquals(Character.valueOf('g'), doubleHigh.point());
 		
 		// basic lookup
 		this.check(any, 1, "#bc", true, "any");

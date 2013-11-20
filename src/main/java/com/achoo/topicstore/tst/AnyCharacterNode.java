@@ -1,101 +1,25 @@
 package com.achoo.topicstore.tst;
 
-import java.util.Collection;
-import java.util.Set;
 
-public class AnyCharacterNode<D> extends DepthContentNode<D> {
+public class AnyCharacterNode<D> extends LiteralNode<D> {
 	
 	public static final Character ANY_CHARACTER = '#';
 	
-	private InternalNode<D> match;
-	
-	private InternalNode<D> shunt;
+	public AnyCharacterNode() {
+		super(AnyCharacterNode.ANY_CHARACTER);
+	}
 	
 	@Override
-	public void lookup(Set<D> results, char[] key, int index, boolean exact) {
-		// nothing to do here
-		if(index >= key.length) {
-			return;
-		}
-		
-		Character local = Character.valueOf(key[index]);
-		
-		// exact match
-		if(exact && AnyCharacterNode.ANY_CHARACTER.equals(local)) {
-			if(index == key.length - 1) {
-				results.addAll(this.getContentAtDepth(index));
-			} else if(this.match != null) {
-				this.match.lookup(results, key, index+1, exact);
-			}
-		} else if(exact) {
-			if(this.shunt != null) {
-				this.shunt.lookup(results, key, index, exact);
-			}
-		} else {
-			if(index == key.length - 1) {
-				results.addAll(this.getContentAtDepth(index));
-			} else if(this.match != null) {
-				this.match.lookup(results, key, index+1, exact);
-			}
-			
-			if(this.shunt != null) {
-				this.shunt.lookup(results, key, index, exact);
-			}
-		}
+	public boolean matches(char value, boolean exact) {
+		if(exact) {
+			return AnyCharacterNode.ANY_CHARACTER.equals(Character.valueOf(value));
+		} 
+		return true;
 	}
-
-	@Override
-	public void add(char[] key, int index, Collection<D> values) {
-		// nothing to do here
-		if(index >= key.length) {
-			return;
-		}
-		
-		Character local = Character.valueOf(key[index]);
-		if(AnyCharacterNode.ANY_CHARACTER.equals(local)) {
-			// matches!  use match branch!
-			if(index == key.length - 1) {
-				this.addContentAtDepth(index, values);
-			} else {
-				if(this.match == null) {
-					Character nextCharacter = Character.valueOf(key[index+1]);
-					this.match = NodeFactory.create(nextCharacter);
-				}
-				this.match.add(key, index+1, values);
-			}
-		} else {
-			// does not match! *shunt* away
-			if(this.shunt == null) {
-				this.shunt = NodeFactory.create(local);
-			}
-			this.shunt.add(key, index, values);
-		}
-	}
-
 
 	@Override
 	public boolean extend(boolean exact) {
 		return !exact;
 	}
 	
-	@Override
-    public void print(String prefix, String describe,  boolean isTail) {
-        System.out.println(prefix + (isTail ? "└── " : "├── ") + " " + describe + " " + AnyCharacterNode.ANY_CHARACTER);
-        if(this.match != null) {
-        	this.match.print(prefix + (isTail ? "    " : "│   "), "[MATCH]", this.shunt == null);
-        }
-        if(this.shunt != null) {
-        	this.shunt.print(prefix + (isTail ? "    " : "│   "), "[SHUNT]", true);
-        }
-    }
-	
-	InternalNode<D> match() {
-		return this.match;				
-	}
-	
-	InternalNode<D> shunt() {
-		return this.shunt;
-	}
-
-
 }

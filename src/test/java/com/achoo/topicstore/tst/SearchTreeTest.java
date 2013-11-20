@@ -13,6 +13,11 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 		tree.add("abc#ez", "one-wild");
 		tree.add("aa#z#z", new String[]{"double-a", "double-double"});
 		tree.add("aa##zz", "aa-zzzzzzz");
+		tree.add("f", "f1");
+		tree.add("ff", "f2");
+		tree.add("fff", "f3");
+		tree.add("ffff", "f4");
+		tree.add("fffff", "f5");
 		
 		tree.print();
 		
@@ -26,8 +31,19 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 		this.check(tree, 1, "a####z", true, "repeat-wild");
 		this.check(tree, 1, "abcdez", true, "straight");
 		this.check(tree, 1, "abc#ez", true, "one-wild");
-		this.check(tree, 2, "aa#z#z", true, "doulbe-a", "double-double");
+		this.check(tree, 2, "aa#z#z", true, "double-a", "double-double");
 		this.check(tree, 1, "aa##zz", true, "aa-zzzzzzz");
+		
+		// checking repeats
+		this.check(tree, 1, "f", true, "f1");
+		this.check(tree, 1, "f", false, "f1");
+		this.check(tree, 1, "fff", true, "f3");
+		this.check(tree, 1, "fff", false, "f3");
+		this.check(tree, 1, "fffff", true, "f5");
+		this.check(tree, 1, "fffff", false, "f5");
+		this.check(tree, 0, "ffffffff", true);
+		this.check(tree, 0, "ffffffff", false);
+		
 		
 		// these should not inexact match
 		this.check(tree, 0, "bcdefz", false);

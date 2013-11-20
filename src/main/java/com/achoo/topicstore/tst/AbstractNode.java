@@ -12,6 +12,8 @@ public abstract class AbstractNode<D> implements InternalNode<D> {
 
 	}
 	
+	public abstract boolean matches(char value, boolean exact);
+	
 	public Set<D> lookup(String key, boolean exact) {
 		Set<D> results = new TreeSet<D>();
 		this.lookup(results, key, exact);

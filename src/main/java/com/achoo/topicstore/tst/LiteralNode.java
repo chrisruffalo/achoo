@@ -23,7 +23,7 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		}
 		
 		Character local = Character.valueOf(key[index]);
-		if(this.point.equals(local)) {
+		if(this.matches(local, exact)) {
 			if(index == key.length - 1) {
 				results.addAll(this.getContentAtDepth(index));
 			} else {
@@ -48,7 +48,7 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		}
 		
 		Character local = Character.valueOf(key[index]);
-		if(this.point.equals(local)) {
+		if(this.matches(local, true)) {
 			if(index == key.length - 1) {
 				this.addContentAtDepth(index, values);
 			} else {
@@ -81,6 +81,11 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	@Override
 	public boolean extend(boolean exact) {
 		return false;
+	}
+	
+	@Override
+	public boolean matches(char value, boolean exact) {
+		return this.point.equals(Character.valueOf(value));	
 	}
 	
 	Character point() {

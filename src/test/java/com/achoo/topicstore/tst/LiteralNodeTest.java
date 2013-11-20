@@ -18,12 +18,16 @@ public class LiteralNodeTest extends AbstractTernaryTestCase {
 		Assert.assertNull(base.high());
 		
 		LiteralNode<String> low = (LiteralNode<String>)base.low();
-		Assert.assertNotNull(low);
-		Assert.assertEquals(Character.valueOf('a'), low.point());
+		LiteralNode<String> same = (LiteralNode<String>)base.same();
+		LiteralNode<String> high = (LiteralNode<String>)base.high();
+		Assert.assertNull(low);
+		Assert.assertNull(high);
+		Assert.assertNotNull(same);
+		Assert.assertEquals(Character.valueOf('a'), same.point());
 		
 		base.add("qb", (String)null);
-		Assert.assertNotNull(low.high());
-		Assert.assertNull(low.low());
+		Assert.assertNull(same.low());
+		Assert.assertNotNull(same.high());
 	}
 
 	@Test

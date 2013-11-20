@@ -11,6 +11,8 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	
 	private InternalNode<D> lower;
 	
+	private InternalNode<D> same;
+	
 	public LiteralNode(char local) {
 		// set value
 		this.point = Character.valueOf(local);
@@ -25,9 +27,11 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.matches(local, exact)) {
 			if(index == key.length - 1) {
-				results.addAll(this.getContentAtDepth(index));
+				results.addAll(this.getContentAtDepth(key.length));
 			} else {
-				this.lookup(results, key, index+1, exact);
+				if(this.same != null) {
+					this.same.lookup(results, key, index+1, exact);
+				}
 			}
 		}
 		
@@ -50,9 +54,13 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.matches(local, true)) {
 			if(index == key.length - 1) {
-				this.addContentAtDepth(index, values);
+				this.addContentAtDepth(key.length, values);
 			} else {
-				this.add(key, index+1, values);
+				Character next = key[index+1];
+				if(this.same == null) {
+					this.same = NodeFactory.create(next);
+				}				
+				this.same.add(key, index+1, values);
 			}
 		} else if(this.point.compareTo(local) < 0) {
 			if(this.higher == null) {
@@ -71,8 +79,13 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	public void print(String prefix, String describe,  boolean isTail) {
         System.out.println(prefix + (isTail ? "└── " : "├── ") + " " + describe + " " + this.point + " -> " + this.contentString());
         if(this.higher != null) {
-        	this.higher.print(prefix + (isTail ? "    " : "│   ") , "[HIGH]", this.lower == null);
+        	this.higher.print(prefix + (isTail ? "    " : "│   ") , "[HIGH]", this.lower == null && this.same == null);
         }
+        
+        if(this.same != null) {
+        	this.same.print(prefix + (isTail ? "    " : "│   ") , "[SAME]", this.lower == null);
+        }
+
         if(this.lower != null) {
         	this.lower.print(prefix + (isTail ? "    " : "│   ") , "[LOW]", true);
         }
@@ -94,6 +107,10 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	
 	InternalNode<D> low() {
 		return this.lower;
+	}
+	
+	InternalNode<D> same() {
+		return this.same;
 	}
 	
 	InternalNode<D> high() {

@@ -16,21 +16,23 @@ public class AnyCharacterNodeTest extends AbstractTernaryTestCase {
 		LiteralNode<String> firstBranch = (LiteralNode<String>)any.high();
 		
 		Assert.assertNotNull(firstBranch);
-		Assert.assertEquals(Character.valueOf('b'), firstBranch.point());
+		Assert.assertEquals(Character.valueOf('a'), firstBranch.point());
 		
 		// get b-point's children (c and a)
 		LiteralNode<String> high = (LiteralNode<String>)firstBranch.high();
 		LiteralNode<String> low = (LiteralNode<String>)firstBranch.low();
+		LiteralNode<String> same = (LiteralNode<String>)firstBranch.same();
 		
 		Assert.assertNotNull(high);
-		Assert.assertNotNull(low);
+		Assert.assertNotNull(same);
+		Assert.assertNull(low);
 		
 		// high is available
-		Assert.assertEquals(Character.valueOf('c'), high.point());
+		Assert.assertEquals(Character.valueOf('g'), high.point());
 		
 		// # -> b -> c -> g
-		LiteralNode<String> doubleHigh = (LiteralNode<String>)high.high();
-		Assert.assertEquals(Character.valueOf('g'), doubleHigh.point());
+		LiteralNode<String> highSame = (LiteralNode<String>)high.same();
+		Assert.assertEquals(Character.valueOf('b'), highSame.point());
 		
 		// basic lookup
 		this.check(any, 1, "#bc", true, "any");
@@ -60,7 +62,7 @@ public class AnyCharacterNodeTest extends AbstractTernaryTestCase {
 		this.check(any, 2, "abbc", false, "cee", "all");
 
 		// other misc checks
-		this.check(any, 1, "abdf", false);
+		this.check(any, 1, "abdf", false, "all");
 		this.check(any, 0, "abdf", true);
 
 		// matching checks

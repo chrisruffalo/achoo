@@ -3,6 +3,7 @@ package com.achoo.topicstore.tst;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.achoo.topicstore.tst.config.DefaultSearchConfiguration;
 import com.achoo.topicstore.tst.matcher.AnyCharacterMatcher;
 import com.achoo.topicstore.tst.matcher.LiteralCharacterMatcher;
 
@@ -10,7 +11,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testLiteralBasicAdd() {
-		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('q'));
+		DirectionalNode<String> base = new DirectionalNode<>(new LiteralCharacterMatcher('q'), new DefaultSearchConfiguration());
 
 		Assert.assertEquals(Character.valueOf('q'), base.value());
 		Assert.assertNull(base.low());
@@ -34,7 +35,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testLiteralLookup() {
-		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('q'));
+		DirectionalNode<String> base = new DirectionalNode<>(new LiteralCharacterMatcher('q'), new DefaultSearchConfiguration());
 		base.put("cat", "valueCat");
 		base.put("cot", "valueCot");
 		base.put("cut", "valueCut");
@@ -51,7 +52,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testLiteralRepeatingAdd() {
-		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('q'));
+		DirectionalNode<String> base = new DirectionalNode<>(new LiteralCharacterMatcher('q'), new DefaultSearchConfiguration());
 		base.put("qq", "quit");
 		Assert.assertNull(base.low());
 		Assert.assertNull(base.high());
@@ -63,7 +64,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 
 	@Test
 	public void testLiteralRepeatingLookup() {
-		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('c'));
+		DirectionalNode<String> base = new DirectionalNode<>(new LiteralCharacterMatcher('c'), new DefaultSearchConfiguration());
 		base.put("co", "company");
 		base.put("coo", "dove");
 		base.put("cooo", "longer");
@@ -83,7 +84,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 	
 	@Test
     public void testAnyCharacterStructureAndLookup() {
-	    DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'));
+	    DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'), new DefaultSearchConfiguration());
 	    
 	    any.put("#bc", "any");
 	    any.put("abc", "first");
@@ -127,7 +128,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
     
     @Test
     public void testRepeatingAnyCharacterNodes() {
-		DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'));
+		DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'), new DefaultSearchConfiguration());
 	    
 	    any.put("a##c", "cee");
 	    any.put("a##d", "dee");

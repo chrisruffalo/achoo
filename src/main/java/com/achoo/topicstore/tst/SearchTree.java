@@ -5,10 +5,23 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import com.achoo.topicstore.tst.config.DefaultSearchConfiguration;
+import com.achoo.topicstore.tst.config.SearchConfiguration;
+
 public class SearchTree<D> implements SearchNode<D> {
 
 	private InternalNode<D> root;
 
+	private SearchConfiguration configuration;
+	
+	public SearchTree() {
+		this.configuration = new DefaultSearchConfiguration();
+	}
+	
+	public SearchTree(SearchConfiguration configuration) {
+		this.configuration = configuration;
+	}
+	
 	@Override
 	public Set<D> find(String key, boolean exact) {
 		if(this.root != null) {
@@ -43,10 +56,14 @@ public class SearchTree<D> implements SearchNode<D> {
 		if(this.root == null) {
 			char[] keyArray = key.toCharArray();
 			Character local = keyArray[0];
-			this.root = NodeFactory.create(local);
+			this.root = NodeFactory.create(null, local, this.configuration);
 		}
 		
 		this.root.put(key, values);
+	}
+	
+	public SearchConfiguration configuration() {
+		return this.configuration;
 	}
 
 	@Override

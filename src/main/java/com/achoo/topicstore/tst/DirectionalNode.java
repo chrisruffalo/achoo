@@ -1,5 +1,6 @@
 package com.achoo.topicstore.tst;
 
+import com.achoo.topicstore.tst.config.SearchConfiguration;
 import com.achoo.topicstore.tst.matcher.Matcher;
 import com.achoo.topicstore.tst.visitor.Visitor;
 
@@ -13,7 +14,8 @@ class DirectionalNode<D> extends AbstractNode<D> {
 	
 	private InternalNode<D> lower;
 	
-	public DirectionalNode(Matcher matcher) {
+	public DirectionalNode(Matcher matcher, SearchConfiguration configuration) {
+		super(configuration);
 		this.matcher = matcher;
 	}
 	
@@ -27,11 +29,14 @@ class DirectionalNode<D> extends AbstractNode<D> {
 		if(this.matcher.match(local, exact)) {
 			if(index == key.length - 1) {
 				visitor.at(this, index, key, exact);
+				if(this.same != null && this.same.attracts(exact)) {
+					this.same.visit(visitor, key, index+1, exact);
+				}
 			} else {
 				if(visitor.construct() && this.same == null) {
 					Character next = key[index+1];
 					if(this.same == null) {
-						this.same = NodeFactory.create(next);
+						this.same = this.construct(next);
 					}
 				}
 				
@@ -43,7 +48,7 @@ class DirectionalNode<D> extends AbstractNode<D> {
 		
 		if(this.matcher.compare(local) < 0 || (this.higher != null && !exact && this.higher.attracts(exact))) {
 			if(visitor.construct() && this.higher == null) {
-				this.higher = NodeFactory.create(local);
+				this.higher = this.construct(local);
 			}
 			
 			if(this.higher != null) {
@@ -53,7 +58,7 @@ class DirectionalNode<D> extends AbstractNode<D> {
 		
 		if((this.matcher.compare(local) > 0 || (this.lower != null && !exact && this.lower.attracts(exact)))) {
 			if(visitor.construct() && this.lower == null) {
-				this.lower = NodeFactory.create(local);
+				this.lower = this.construct(local);
 			}
 			
 			if(this.lower != null) {
@@ -97,5 +102,10 @@ class DirectionalNode<D> extends AbstractNode<D> {
 	
 	InternalNode<D> high() {
 		return this.higher;
+	}
+
+	@Override
+	public boolean optional() {
+		return false;
 	}
 }

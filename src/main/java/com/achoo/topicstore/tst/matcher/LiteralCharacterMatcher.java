@@ -1,28 +1,15 @@
 package com.achoo.topicstore.tst.matcher;
 
-import java.util.TreeMap;
 
 public class LiteralCharacterMatcher implements Matcher {
 
-	private static TreeMap<Character, Matcher> matcherPool = new TreeMap<>();
-	
-	public static Matcher create(char local) {
-		Character character = Character.valueOf(local);
-		Matcher matcher = LiteralCharacterMatcher.matcherPool.get(character);
-		if(matcher == null) {
-			matcher = new LiteralCharacterMatcher(character);
-			LiteralCharacterMatcher.matcherPool.put(character, matcher);
-		}
-		return matcher;
-	}
-	
 	private Character local;
 	
-	private LiteralCharacterMatcher(char character) {
+	public LiteralCharacterMatcher(char character) {
 		this(Character.valueOf(character));
 	}
 	
-	private LiteralCharacterMatcher(Character character) {
+	public LiteralCharacterMatcher(Character character) {
 		this.local = character;
 	}
 	

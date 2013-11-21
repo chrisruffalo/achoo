@@ -25,6 +25,13 @@ public interface InternalNode<D> extends SearchNode<D> {
 	boolean attracts(boolean exact);
 	
 	/**
+	 * Is the node optional?
+	 * 
+	 * @return
+	 */
+	boolean optional();
+	
+	/**
 	 * Internal mechanism for printing the layout of the nodes
 	 * 
 	 * @param prefix spacing

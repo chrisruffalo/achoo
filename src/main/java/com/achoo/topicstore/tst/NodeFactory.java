@@ -16,10 +16,10 @@ public final class NodeFactory {
 		final InternalNode<D> node;
 		if(configuration.wildcards().contains(local)) {
 			Matcher matcher = new AnyCharacterMatcher(local);
-			node = new OptionalNode<>(parent, matcher, true, configuration);
+			node = new OptionalNode<>(matcher, true, configuration);
 		} else if(configuration.optional().contains(local)) {
 			Matcher matcher = new AnyCharacterMatcher(local);
-			node = new OptionalNode<>(parent, matcher, false, configuration);
+			node = new OptionalNode<>(matcher, false, configuration);
 		} else if(configuration.any().contains(local)) {
 			Matcher matcher = new AnyCharacterMatcher(local);
 			node = new DirectionalNode<>(matcher, configuration);

@@ -35,9 +35,7 @@ class DirectionalNode<D> extends AbstractNode<D> {
 			} else {
 				if(visitor.construct() && this.same == null) {
 					Character next = key[index+1];
-					if(this.same == null) {
-						this.same = this.construct(next);
-					}
+					this.same = this.construct(next);
 				}
 				
 				if(this.same != null) {

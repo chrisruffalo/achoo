@@ -10,7 +10,7 @@ public class LiteralNodeTest extends AbstractTernaryTestCase {
 	public void testBasicAdd() {
 		LiteralNode<String> base = new LiteralNode<>('q');
 		
-		Assert.assertEquals(Character.valueOf('q'), base.point());
+		Assert.assertEquals(Character.valueOf('q'), base.value());
 		Assert.assertNull(base.low());
 		Assert.assertNull(base.high());
 		
@@ -19,7 +19,7 @@ public class LiteralNodeTest extends AbstractTernaryTestCase {
 		
 		LiteralNode<String> low = (LiteralNode<String>)base.low();
 		Assert.assertNotNull(low);
-		Assert.assertEquals(Character.valueOf('a'), low.point());
+		Assert.assertEquals(Character.valueOf('a'), low.value());
 		
 		base.add("qb", (String)null);
 		Assert.assertNotNull(low.high());

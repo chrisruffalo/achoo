@@ -1,5 +1,8 @@
 package com.achoo.topicstore.tst;
 
+import com.achoo.topicstore.tst.matcher.LiteralCharacterMatcher;
+import com.achoo.topicstore.tst.matcher.Matcher;
+
 public final class NodeFactory {
 
 	private NodeFactory() {
@@ -12,7 +15,8 @@ public final class NodeFactory {
 		if(AnyCharacterNode.ANY_CHARACTER.equals(local)) {
 			node = new AnyCharacterNode<>();
 		} else {
-			node = new LiteralNode<>(local);
+			Matcher matcher = LiteralCharacterMatcher.create(local);
+			node = new LiteralNode<>(matcher);
 		}
 		
 		return node;

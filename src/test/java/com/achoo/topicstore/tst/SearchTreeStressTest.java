@@ -15,7 +15,7 @@ public class SearchTreeStressTest {
 	// in percent
 	private static final int LOG_INTERVAL = 10;
 	
-	private static final int SIZE = 10000;
+	private static final int SIZE = 100000;
 	
 	private static final int LENGTH = 50;
 	
@@ -24,7 +24,7 @@ public class SearchTreeStressTest {
 		Logger logger = LoggerFactory.getLogger(this.getClass()); 
 		
 		SearchTree<String> node = new SearchTree<>();
-		node.add(Strings.repeat("#", SearchTreeStressTest.LENGTH), "root-max-any-character");
+		node.put(Strings.repeat("#", SearchTreeStressTest.LENGTH), "root-max-any-character");
 		
 		long start = System.currentTimeMillis();
 		long nextPercent = SearchTreeStressTest.SIZE / SearchTreeStressTest.LOG_INTERVAL;
@@ -32,14 +32,14 @@ public class SearchTreeStressTest {
 			String generated = this.generate(true);
 			Assert.assertEquals(SearchTreeStressTest.LENGTH, generated.length());
 			//System.out.println("generated: " + generated);
-			node.add(generated, new String(generated.substring(0, 1)));
+			node.put(generated, new String(generated.substring(0, 1)));
 			
 			if(i > nextPercent) {
 				logger.info("generated {} (of {}) items in : {}ms", new Object[]{i, SearchTreeStressTest.SIZE, (System.currentTimeMillis() - start)});
 				nextPercent = nextPercent + (SearchTreeStressTest.SIZE / SearchTreeStressTest.LOG_INTERVAL);	
 			}
 		}
-		node.add(Strings.repeat("#", SearchTreeStressTest.LENGTH), "max-any-character");
+		node.put(Strings.repeat("#", SearchTreeStressTest.LENGTH), "max-any-character");
 
 		logger.info("generation took: " + (System.currentTimeMillis() - start) + "ms");
 		start = System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class SearchTreeStressTest {
 			String generated = this.generate(false);
 			Assert.assertEquals(SearchTreeStressTest.LENGTH, generated.length());
 			//logger.info("searching: {}", generated);
-			node.lookup(findSet, generated, false);
+			findSet.addAll(node.find(generated, false));
 						
 			if(i > nextPercent) {
 				logger.info("searched {} (of {}) items in : {}ms", new Object[]{i, SearchTreeStressTest.SIZE, (System.currentTimeMillis() - start)});

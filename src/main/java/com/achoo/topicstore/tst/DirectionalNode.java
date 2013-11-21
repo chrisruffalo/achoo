@@ -1,11 +1,9 @@
 package com.achoo.topicstore.tst;
 
-import java.util.Collection;
-import java.util.Set;
-
 import com.achoo.topicstore.tst.matcher.Matcher;
+import com.achoo.topicstore.tst.visitor.Visitor;
 
-class DirectionalNode<D> extends DepthContentNode<D> {
+class DirectionalNode<D> extends AbstractNode<D> {
 	
 	private Matcher matcher;
 	
@@ -19,7 +17,7 @@ class DirectionalNode<D> extends DepthContentNode<D> {
 		this.matcher = matcher;
 	}
 	
-	public void lookup(Set<D> results, char[] key, int index, boolean exact) {
+	public void visit(Visitor<D> visitor, char[] key, int index, boolean exact) {
 		// nothing to do here
 		if(index >= key.length) {
 			return;
@@ -28,51 +26,39 @@ class DirectionalNode<D> extends DepthContentNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.matcher.match(local, exact)) {
 			if(index == key.length - 1) {
-				results.addAll(this.getContentAtDepth(key.length));
+				visitor.at(this, index, key, exact);
 			} else {
+				if(visitor.construct() && this.same == null) {
+					Character next = key[index+1];
+					if(this.same == null) {
+						this.same = NodeFactory.create(next);
+					}
+				}
+				
 				if(this.same != null) {
-					this.same.lookup(results, key, index+1, exact);
+					this.same.visit(visitor, key, index+1, exact);
 				}
 			}
 		}
 		
-		if(this.higher != null && (this.matcher.compare(local) < 0 || this.higher.attracts(exact))) {
-			this.higher.lookup(results, key, index, exact);
-		} 
-		
-		if(this.lower != null  && (this.matcher.compare(local) > 0 || this.lower.attracts(exact))) {
-			this.lower.lookup(results, key, index, exact);
-		}
-	}
-
-	@Override
-	public void add(char[] key, int index, Collection<D> values) {
-		// nothing to do here
-		if(index >= key.length) {
-			return;
-		}
-		
-		Character local = Character.valueOf(key[index]);
-		if(this.matcher.match(local, true)) {
-			if(index == key.length - 1) {
-				this.addContentAtDepth(key.length, values);
-			} else {
-				Character next = key[index+1];
-				if(this.same == null) {
-					this.same = NodeFactory.create(next);
-				}				
-				this.same.add(key, index+1, values);
-			}
-		} else if(this.matcher.compare(local) < 0) {
-			if(this.higher == null) {
+		if(this.matcher.compare(local) < 0 || (this.higher != null && !exact && this.higher.attracts(exact))) {
+			if(visitor.construct() && this.higher == null) {
 				this.higher = NodeFactory.create(local);
 			}
-			this.higher.add(key, index, values);
-		} else if(this.matcher.compare(local) > 0) {
-			if(this.lower == null) {
+			
+			if(this.higher != null) {
+				this.higher.visit(visitor, key, index, exact);
+			}
+		} 
+		
+		if((this.matcher.compare(local) > 0 || (this.lower != null && !exact && this.lower.attracts(exact)))) {
+			if(visitor.construct() && this.lower == null) {
 				this.lower = NodeFactory.create(local);
-			} 
-			this.lower.add(key, index, values);
+			}
+			
+			if(this.lower != null) {
+				this.lower.visit(visitor, key, index, exact);
+			}
 		}
 	}
 	
@@ -112,5 +98,4 @@ class DirectionalNode<D> extends DepthContentNode<D> {
 	InternalNode<D> high() {
 		return this.higher;
 	}
-
 }

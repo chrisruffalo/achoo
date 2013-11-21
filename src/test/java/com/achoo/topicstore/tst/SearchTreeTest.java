@@ -8,16 +8,16 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 	public void doubleRepeatingAnyAndLiteralTest() {
 		
 		SearchTree<String> tree = new SearchTree<>();
-		tree.add("a####z", "repeat-wild");
-		tree.add("abcdez", "straight");
-		tree.add("abc#ez", "one-wild");
-		tree.add("aa#z#z", new String[]{"double-a", "double-double"});
-		tree.add("aa##zz", "aa-zzzzzzz");
-		tree.add("f", "f1");
-		tree.add("ff", "f2");
-		tree.add("fff", "f3");
-		tree.add("ffff", "f4");
-		tree.add("fffff", "f5");
+		tree.put("a####z", "repeat-wild");
+		tree.put("abcdez", "straight");
+		tree.put("abc#ez", "one-wild");
+		tree.put("aa#z#z", new String[]{"double-a", "double-double"});
+		tree.put("aa##zz", "aa-zzzzzzz");
+		tree.put("f", "f1");
+		tree.put("ff", "f2");
+		tree.put("fff", "f3");
+		tree.put("ffff", "f4");
+		tree.put("fffff", "f5");
 		
 		// these should not (exact) match
 		this.check(tree, 0, "a##z", true);

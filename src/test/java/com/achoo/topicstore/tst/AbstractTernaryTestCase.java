@@ -11,7 +11,7 @@ import org.junit.Assert;
 public abstract class AbstractTernaryTestCase {
 
 	public void check(SearchNode<String> tree, int expected, String key, boolean exact, String... match) {
-		Set<String> results = tree.lookup(key, exact);
+		Set<String> results = tree.find(key, exact);
 		if(expected != results.size()) {
 			StringBuilder builder = new StringBuilder();
 			builder.append("found: {");

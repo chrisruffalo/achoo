@@ -4,47 +4,49 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class SearchTree<D> implements SearchNode<D> {
 
 	private InternalNode<D> root;
 
 	@Override
-	public Set<D> lookup(String key, boolean exact) {
-		Set<D> results = new TreeSet<D>();
-		this.lookup(results, key, exact);
-		return results;
-	}
-	
-	@Override
-	public void lookup(Set<D> accumulator, String key, boolean exact) {
+	public Set<D> find(String key, boolean exact) {
 		if(this.root != null) {
-			this.root.lookup(accumulator, key, exact);
-		}		
+			return this.root.find(key, exact);
+		}
+		return Collections.emptySet();
 	}
 
 	@Override
-	public void add(String key, D value) {
-		this.add(key, Collections.singleton(value));
+	public void put(String key, D value) {
+		this.put(key, Collections.singleton(value));
 	}
 
 	@Override
-	public void add(String key, D[] value) {
-		this.add(key, Arrays.asList(value));
+	public void put(String key, D[] values) {
+		if(values == null || values.length == 0) {
+			return;
+		}
+		this.put(key, Arrays.asList(values));
 	}
 
 	@Override
-	public void add(String key, Collection<D> value) {
+	public void put(String key, Collection<D> values) {
+		if(values == null || values.isEmpty()) {
+			return;
+		}
+		
 		if(key == null || key.isEmpty()) {
 			return;
 		}
-		int index = 0;
-		char[] array = key.toCharArray();
+		
 		if(this.root == null) {
-			this.root = NodeFactory.create(array[0]);
+			char[] keyArray = key.toCharArray();
+			Character local = keyArray[0];
+			this.root = NodeFactory.create(local);
 		}
-		this.root.add(array, index, value);
+		
+		this.root.put(key, values);
 	}
 
 	@Override
@@ -53,5 +55,4 @@ public class SearchTree<D> implements SearchNode<D> {
 			this.root.print();
 		}
 	}
-	
 }

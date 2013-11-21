@@ -16,7 +16,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 		Assert.assertNull(base.low());
 		Assert.assertNull(base.high());
 
-		base.add("qa", (String) null);
+		base.put("qa", (String) null);
 		Assert.assertNull(base.high());
 
 		DirectionalNode<String> low = (DirectionalNode<String>) base.low();
@@ -27,7 +27,7 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 		Assert.assertNotNull(same);
 		Assert.assertEquals(Character.valueOf('a'), same.value());
 
-		base.add("qb", (String) null);
+		base.put("qb", (String) null);
 		Assert.assertNull(same.low());
 		Assert.assertNotNull(same.high());
 	}
@@ -35,9 +35,9 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 	@Test
 	public void testLiteralLookup() {
 		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('q'));
-		base.add("cat", "valueCat");
-		base.add("cot", "valueCot");
-		base.add("cut", "valueCut");
+		base.put("cat", "valueCat");
+		base.put("cot", "valueCot");
+		base.put("cut", "valueCut");
 
 		this.check(base, 1, "cat", true, "valueCat");
 		this.check(base, 1, "cot", true, "valueCot");
@@ -52,11 +52,11 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 	@Test
 	public void testLiteralRepeatingAdd() {
 		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('q'));
-		base.add("qq", "quit");
+		base.put("qq", "quit");
 		Assert.assertNull(base.low());
 		Assert.assertNull(base.high());
 
-		base.add("qqq", "really");
+		base.put("qqq", "really");
 		Assert.assertNull(base.low());
 		Assert.assertNull(base.high());
 	}
@@ -64,10 +64,10 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
 	@Test
 	public void testLiteralRepeatingLookup() {
 		DirectionalNode<String> base = new DirectionalNode<>(LiteralCharacterMatcher.create('c'));
-		base.add("co", "company");
-		base.add("coo", "dove");
-		base.add("cooo", "longer");
-		base.add("coooo", "longest");
+		base.put("co", "company");
+		base.put("coo", "dove");
+		base.put("cooo", "longer");
+		base.put("coooo", "longest");
 
 		this.check(base, 1, "co", true, "company");
 		this.check(base, 1, "coo", true, "dove");
@@ -85,9 +85,9 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
     public void testAnyCharacterStructureAndLookup() {
 	    DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'));
 	    
-	    any.add("#bc", "any");
-	    any.add("abc", "first");
-	    any.add("gbc", "second");
+	    any.put("#bc", "any");
+	    any.put("abc", "first");
+	    any.put("gbc", "second");
 	    
 	    DirectionalNode<String> firstBranch = (DirectionalNode<String>)any.high();
 	    
@@ -129,9 +129,9 @@ public class DirectionalNodeTest extends AbstractTernaryTestCase {
     public void testRepeatingAnyCharacterNodes() {
 		DirectionalNode<String> any = new DirectionalNode<>(new AnyCharacterMatcher('#'));
 	    
-	    any.add("a##c", "cee");
-	    any.add("a##d", "dee");
-	    any.add("a###", "all");
+	    any.put("a##c", "cee");
+	    any.put("a##d", "dee");
+	    any.put("a###", "all");
 	    
 	    // comparison between exact and fuzzy
 	    this.check(any, 0, "abbc", true);

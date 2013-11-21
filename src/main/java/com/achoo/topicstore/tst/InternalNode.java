@@ -3,11 +3,15 @@ package com.achoo.topicstore.tst;
 import java.util.Collection;
 import java.util.Set;
 
-interface InternalNode<D> extends SearchNode<D> {
+import com.achoo.topicstore.tst.visitor.Visitor;
 
-	void lookup(Set<D> results, char[] key, int index, boolean exact);
+public interface InternalNode<D> extends SearchNode<D> {
+
+	Set<D> get(int index);
 	
-	void add(char[] key, int index, Collection<D> values);
+	void add(int index, Collection<D> values);
+	
+	void visit(Visitor<D> visitor, char[] key, int index, boolean exact);
 	
 	/**
 	 * Checks to see if a search should extend to the node even in the

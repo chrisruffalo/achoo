@@ -15,7 +15,7 @@ public class SearchTreeStressTest {
 	// in percent
 	private static final int LOG_INTERVAL = 10;
 	
-	private static final int SIZE = 100000;
+	private static final int SIZE = 1000;
 	
 	private static final int LENGTH = 50;
 	

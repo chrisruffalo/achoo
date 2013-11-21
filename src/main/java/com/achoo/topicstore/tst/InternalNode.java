@@ -18,7 +18,7 @@ interface InternalNode<D> extends SearchNode<D> {
 	 * @param exact denotes if the search is exact (no wildcards allowed)
 	 * @return true if the search should extend, false otherwise
 	 */
-	boolean extend(boolean exact);
+	boolean attracts(boolean exact);
 	
 	/**
 	 * Internal mechanism for printing the layout of the nodes

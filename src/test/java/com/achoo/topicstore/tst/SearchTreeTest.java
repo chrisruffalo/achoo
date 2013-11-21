@@ -19,8 +19,6 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 		tree.add("ffff", "f4");
 		tree.add("fffff", "f5");
 		
-		tree.print();
-		
 		// these should not (exact) match
 		this.check(tree, 0, "a##z", true);
 		this.check(tree, 0, "abcd#z", true);
@@ -44,9 +42,14 @@ public class SearchTreeTest extends AbstractTernaryTestCase {
 		this.check(tree, 0, "ffffffff", true);
 		this.check(tree, 0, "ffffffff", false);
 		
+		// this is actually pretty awesome because it
+		// happens to be a very specially crafted string
+		// that slots right into a bug case.
+		// (there are changes in LiteralNode's traversal
+		// pattern that resulted from this.)
+		this.check(tree, 0, "bcdefz", false);
 		
 		// these should not inexact match
-		this.check(tree, 0, "bcdefz", false);
 		this.check(tree, 0, "acz", false);
 		this.check(tree, 0, "accz", false);
 		this.check(tree, 0, "acccz", false);

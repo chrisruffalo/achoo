@@ -5,15 +5,17 @@ import java.util.Set;
 
 import com.achoo.topicstore.tst.matcher.Matcher;
 
-class LiteralNode<D> extends DepthContentNode<D> {
+class DirectionalNode<D> extends DepthContentNode<D> {
 	
 	private Matcher matcher;
 	
 	private InternalNode<D> higher;
+
+	private InternalNode<D> same;
 	
 	private InternalNode<D> lower;
 	
-	public LiteralNode(Matcher matcher) {
+	public DirectionalNode(Matcher matcher) {
 		this.matcher = matcher;
 	}
 	
@@ -26,17 +28,19 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.matcher.match(local, exact)) {
 			if(index == key.length - 1) {
-				results.addAll(this.getContentAtDepth(index));
+				results.addAll(this.getContentAtDepth(key.length));
 			} else {
-				this.lookup(results, key, index+1, exact);
+				if(this.same != null) {
+					this.same.lookup(results, key, index+1, exact);
+				}
 			}
 		}
 		
-		if(this.higher != null && (this.matcher.compare(local) < 0 || this.higher.extend(exact))) {
+		if(this.higher != null && (this.matcher.compare(local) < 0 || this.higher.attracts(exact))) {
 			this.higher.lookup(results, key, index, exact);
 		} 
 		
-		if(this.lower != null  && (this.matcher.compare(local) > 0 || this.lower.extend(exact))) {
+		if(this.lower != null  && (this.matcher.compare(local) > 0 || this.lower.attracts(exact))) {
 			this.lower.lookup(results, key, index, exact);
 		}
 	}
@@ -51,9 +55,13 @@ class LiteralNode<D> extends DepthContentNode<D> {
 		Character local = Character.valueOf(key[index]);
 		if(this.matcher.match(local, true)) {
 			if(index == key.length - 1) {
-				this.addContentAtDepth(index, values);
+				this.addContentAtDepth(key.length, values);
 			} else {
-				this.add(key, index+1, values);
+				Character next = key[index+1];
+				if(this.same == null) {
+					this.same = NodeFactory.create(next);
+				}				
+				this.same.add(key, index+1, values);
 			}
 		} else if(this.matcher.compare(local) < 0) {
 			if(this.higher == null) {
@@ -72,16 +80,21 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	public void print(String prefix, String describe,  boolean isTail) {
         System.out.println(prefix + (isTail ? "└── " : "├── ") + " " + describe + " " + this.matcher.value() + " -> " + this.contentString());
         if(this.higher != null) {
-        	this.higher.print(prefix + (isTail ? "    " : "│   ") , "[HIGH]", this.lower == null);
+        	this.higher.print(prefix + (isTail ? "    " : "│   ") , "[HIGH]", this.lower == null && this.same == null);
         }
+        
+        if(this.same != null) {
+        	this.same.print(prefix + (isTail ? "    " : "│   ") , "[SAME]", this.lower == null);
+        }
+
         if(this.lower != null) {
         	this.lower.print(prefix + (isTail ? "    " : "│   ") , "[LOW]", true);
         }
     }
 	
 	@Override
-	public boolean extend(boolean exact) {
-		return false;
+	public boolean attracts(boolean exact) {
+		return this.matcher.attracts(exact);
 	}
 	
 	Character value() {
@@ -90,6 +103,10 @@ class LiteralNode<D> extends DepthContentNode<D> {
 	
 	InternalNode<D> low() {
 		return this.lower;
+	}
+	
+	InternalNode<D> same() {
+		return this.same;
 	}
 	
 	InternalNode<D> high() {
